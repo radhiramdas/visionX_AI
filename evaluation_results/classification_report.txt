@@ -1,0 +1,46 @@
+=========================================================================
+             VISIONX AI - INDEPENDENT TEST SET EVALUATION REPORT          
+             Model: EfficientNetB0 | Weights: best_model_efficientnet_b0.pth
+=========================================================================
+
+Total Test Samples Evaluated : 1236
+Overall Test Accuracy        : 86.08%
+Macro Precision              : 79.71%
+Macro Recall                 : 78.32%
+Macro F1 Score               : 78.57%
+Macro ROC-AUC (OvR)          : 97.63%
+Weighted Precision           : 86.01%
+Weighted Recall              : 86.08%
+Weighted F1 Score            : 85.70%
+
+-------------------------------------------------------------------------
+                        FULL CLASSIFICATION REPORT                       
+-------------------------------------------------------------------------
+                          precision    recall  f1-score   support
+
+                     AMD     0.6769    0.5714    0.6197        77
+                Cataract     0.8320    0.9286    0.8776       112
+                      DR     0.9866    0.9981    0.9923       516
+                Glaucoma     0.7500    0.5769    0.6522       156
+Hypertensive_Retinopathy     0.6500    0.6915    0.6701        94
+           Normal_Fundus     0.7639    0.9218    0.8354       179
+     Pathological_Myopia     0.9205    0.7941    0.8526       102
+
+                accuracy                         0.8608      1236
+               macro avg     0.7971    0.7832    0.7857      1236
+            weighted avg     0.8601    0.8608    0.8570      1236
+
+
+-------------------------------------------------------------------------
+                               CONFUSION MATRIX                          
+-------------------------------------------------------------------------
+Actual \ Pred            |  AMD | Cata |   DR | Glau | Hype | Norm | Path
+-----------------------------------------------------------------
+AMD                      |   44 |    4 |    3 |    5 |    7 |   12 |    2
+Cataract                 |    1 |  104 |    0 |    1 |    2 |    4 |    0
+DR                       |    0 |    0 |  515 |    0 |    0 |    1 |    0
+Glaucoma                 |    9 |   15 |    0 |   90 |   19 |   20 |    3
+Hypertensive_Retinopathy |    7 |    1 |    0 |   11 |   65 |   10 |    0
+Normal_Fundus            |    2 |    1 |    2 |    1 |    6 |  165 |    2
+Pathological_Myopia      |    2 |    0 |    2 |   12 |    1 |    4 |   81
+-----------------------------------------------------------------

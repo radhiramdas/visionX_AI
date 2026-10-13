@@ -1,0 +1,31 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Python cache files
+__pycache__/
+**/__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Dataset folders
+DataSet/
+PreparedData/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Model training checkpoints
+training_checkpoint*.pth
+
+# Experimental models
+tuning_results/
+
+# Other models not selected for deployment
+best_model.pth
+best_model_efficientnet_b0_baseline.pth

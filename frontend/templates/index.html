@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisionX AI - AI-Assisted Multi-Disease Retinal Screening</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="app-header">
+        <div class="header-container">
+            <a href="/" class="brand-link" id="brand-link">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                    </svg>
+                </div>
+                <span class="brand-title">VisionX AI</span>
+                <span class="brand-badge">EfficientNet-B0</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Screening Content -->
+    <main class="main-content">
+        <!-- Hero Information -->
+        <section class="hero-section">
+            <span class="hero-subtitle">Deep Learning Ophthalmology Platform</span>
+            <h1 class="hero-title">AI-Assisted Multi-Disease Retinal Screening</h1>
+            <p class="hero-description">
+                Upload a color retinal fundus image for rapid, AI-driven screening across 7 ocular conditions with visual explainability powered by Grad-CAM.
+            </p>
+            
+            <!-- Supported Conditions Bar -->
+            <div class="conditions-bar">
+                <span class="condition-pill">Diabetic Retinopathy (DR)</span>
+                <span class="condition-pill">Glaucoma</span>
+                <span class="condition-pill">Cataract</span>
+                <span class="condition-pill">AMD</span>
+                <span class="condition-pill">Hypertensive Retinopathy</span>
+                <span class="condition-pill">Pathological Myopia</span>
+                <span class="condition-pill">Normal Fundus</span>
+            </div>
+        </section>
+
+        <!-- Upload & Preview Card -->
+        <section class="glass-card upload-card" id="upload-form">
+            <!-- Error Banner -->
+            <div id="error-banner" class="error-banner" role="alert">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                </svg>
+                <span id="error-message"></span>
+            </div>
+
+            <!-- Drag & Drop Upload Zone -->
+            <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload Retinal Fundus Image">
+                <input type="file" id="file-input" accept=".jpg,.jpeg,image/jpeg" style="display: none;">
+                
+                <div class="dropzone-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                </div>
+                <h3 class="dropzone-title">Upload Retinal Fundus Image</h3>
+                <p class="dropzone-hint">Drag and drop a fundus photograph here, or click to browse</p>
+                <span class="browse-btn" id="browse-btn">Select JPEG File</span>
+            </div>
+
+            <!-- Selected File Preview Container -->
+            <div class="preview-container" id="preview-container">
+                <div class="preview-wrapper">
+                    <img id="preview-image" class="preview-image" src="" alt="Selected Retinal Fundus Preview">
+                </div>
+                <div class="preview-info">
+                    <span id="preview-filename"></span>
+                </div>
+                <button type="button" class="change-file-btn" id="change-file-btn">Choose a different image</button>
+            </div>
+
+            <!-- Action Area -->
+            <div class="action-area">
+                <button type="button" id="analyze-btn" class="btn-primary" disabled>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    Analyze Fundus Image
+                </button>
+            </div>
+
+            <!-- Loading State Overlay -->
+            <div id="loading-overlay" class="loading-overlay">
+                <div class="spinner"></div>
+                <div class="loading-text">Analyzing Retinal Fundus Image...</div>
+                <div class="loading-subtext">Executing EfficientNet-B0 inference & computing Grad-CAM activation heatmap</div>
+            </div>
+
+            <!-- Medical Disclaimer -->
+            <div class="disclaimer-box">
+                <div class="disclaimer-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                    </svg>
+                </div>
+                <div class="disclaimer-text">
+                    <strong>Medical Disclaimer:</strong> VisionX AI provides AI-assisted screening support and does not replace professional clinical judgment or ophthalmological examination.
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <p>VisionX AI &copy; 2026 &bull; AI-Assisted Retinal Disease Screening System &bull; MCA Academic Project</p>
+    </footer>
+
+    <script src="/static/js/script.js"></script>
+</body>
+</html>

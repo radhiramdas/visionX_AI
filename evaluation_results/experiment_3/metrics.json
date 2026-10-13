@@ -1,0 +1,199 @@
+{
+    "model_name": "efficientnet_b0",
+    "experiment": "Experiment 3 (Fine-tuned EfficientNetB0)",
+    "checkpoint_path": "tuning_results\\experiment_3_finetuned\\best_model.pth",
+    "evaluation_split": "test",
+    "total_samples": 1236,
+    "class_order": [
+        "AMD",
+        "Cataract",
+        "DR",
+        "Glaucoma",
+        "Hypertensive_Retinopathy",
+        "Normal_Fundus",
+        "Pathological_Myopia"
+    ],
+    "overall_metrics": {
+        "test_accuracy_pct": 96.2,
+        "macro_precision_pct": 94.81,
+        "macro_recall_pct": 93.68,
+        "macro_f1_score_pct": 93.88,
+        "macro_roc_auc_ovr_pct": 99.88,
+        "weighted_precision_pct": 96.53,
+        "weighted_recall_pct": 96.2,
+        "weighted_f1_score_pct": 96.16
+    },
+    "per_class_metrics": {
+        "AMD": {
+            "support": 77,
+            "precision_pct": 84.44,
+            "recall_pct": 98.7,
+            "f1_score_pct": 91.02,
+            "roc_auc_ovr_pct": 99.9
+        },
+        "Cataract": {
+            "support": 112,
+            "precision_pct": 100.0,
+            "recall_pct": 99.11,
+            "f1_score_pct": 99.55,
+            "roc_auc_ovr_pct": 100.0
+        },
+        "DR": {
+            "support": 516,
+            "precision_pct": 100.0,
+            "recall_pct": 100.0,
+            "f1_score_pct": 100.0,
+            "roc_auc_ovr_pct": 100.0
+        },
+        "Glaucoma": {
+            "support": 156,
+            "precision_pct": 86.05,
+            "recall_pct": 94.87,
+            "f1_score_pct": 90.24,
+            "roc_auc_ovr_pct": 99.62
+        },
+        "Hypertensive_Retinopathy": {
+            "support": 94,
+            "precision_pct": 96.43,
+            "recall_pct": 86.17,
+            "f1_score_pct": 91.01,
+            "roc_auc_ovr_pct": 99.73
+        },
+        "Normal_Fundus": {
+            "support": 179,
+            "precision_pct": 96.74,
+            "recall_pct": 99.44,
+            "f1_score_pct": 98.07,
+            "roc_auc_ovr_pct": 99.99
+        },
+        "Pathological_Myopia": {
+            "support": 102,
+            "precision_pct": 100.0,
+            "recall_pct": 77.45,
+            "f1_score_pct": 87.29,
+            "roc_auc_ovr_pct": 99.93
+        }
+    },
+    "confusion_matrix": [
+        [
+            76,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0
+        ],
+        [
+            0,
+            111,
+            0,
+            0,
+            1,
+            0,
+            0
+        ],
+        [
+            0,
+            0,
+            516,
+            0,
+            0,
+            0,
+            0
+        ],
+        [
+            2,
+            0,
+            0,
+            148,
+            2,
+            4,
+            0
+        ],
+        [
+            3,
+            0,
+            0,
+            9,
+            81,
+            1,
+            0
+        ],
+        [
+            1,
+            0,
+            0,
+            0,
+            0,
+            178,
+            0
+        ],
+        [
+            8,
+            0,
+            0,
+            15,
+            0,
+            0,
+            79
+        ]
+    ],
+    "classification_report_raw": {
+        "AMD": {
+            "precision": 0.8444444444444444,
+            "recall": 0.987012987012987,
+            "f1-score": 0.9101796407185628,
+            "support": 77.0
+        },
+        "Cataract": {
+            "precision": 1.0,
+            "recall": 0.9910714285714286,
+            "f1-score": 0.9955156950672646,
+            "support": 112.0
+        },
+        "DR": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 516.0
+        },
+        "Glaucoma": {
+            "precision": 0.8604651162790697,
+            "recall": 0.9487179487179487,
+            "f1-score": 0.9024390243902439,
+            "support": 156.0
+        },
+        "Hypertensive_Retinopathy": {
+            "precision": 0.9642857142857143,
+            "recall": 0.8617021276595744,
+            "f1-score": 0.9101123595505618,
+            "support": 94.0
+        },
+        "Normal_Fundus": {
+            "precision": 0.967391304347826,
+            "recall": 0.994413407821229,
+            "f1-score": 0.9807162534435262,
+            "support": 179.0
+        },
+        "Pathological_Myopia": {
+            "precision": 1.0,
+            "recall": 0.7745098039215687,
+            "f1-score": 0.8729281767955801,
+            "support": 102.0
+        },
+        "accuracy": 0.9619741100323624,
+        "macro avg": {
+            "precision": 0.9480837970510079,
+            "recall": 0.9367753862435338,
+            "f1-score": 0.9388415928522483,
+            "support": 1236.0
+        },
+        "weighted avg": {
+            "precision": 0.965259450633394,
+            "recall": 0.9619741100323624,
+            "f1-score": 0.9615691935153998,
+            "support": 1236.0
+        }
+    }
+}
