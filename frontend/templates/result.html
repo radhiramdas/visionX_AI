@@ -1,139 +1,263 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Screening Result - VisionX AI</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <title>Screening Diagnostic Result - VisionX AI</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
+
 <body>
-    <!-- Navigation Header -->
-    <header class="app-header">
-        <div class="header-container">
-            <a href="/" class="brand-link" id="brand-link">
+
+    <!-- Header Navigation -->
+    <header class="app-navbar">
+        <div class="nav-container">
+            <a href="/" class="brand-group">
                 <div class="brand-icon">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M2 12c1.73-4.39 6-7.5 10-7.5s8.27 3.11 10 7.5c-1.73 4.39-6 7.5-10 7.5S3.73 16.39 2 12z"></path>
                     </svg>
                 </div>
-                <span class="brand-title">VisionX AI</span>
-                <span class="brand-badge">Screening Report</span>
+                <div class="brand-title">
+                    VisionX <span class="brand-accent">AI</span>
+                </div>
             </a>
-            <button type="button" id="header-back-btn" class="browse-btn" onclick="window.location.href='/'">
-                &larr; New Screening
-            </button>
+
+            <div class="nav-actions">
+                <button type="button" class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle Dark/Light Mode">
+                    <svg id="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                <button type="button" id="header-back-btn" class="btn-primary-cyan" onclick="window.location.href='/'">
+                    + New Patient Screening
+                </button>
+            </div>
         </div>
     </header>
 
-    <main class="main-content" id="result-container">
-        <!-- Fallback if user navigates directly without analysis data -->
-        <div class="glass-card upload-card" id="no-data-card" style="display: none; text-align: center;">
-            <h2 class="hero-title" style="font-size: 1.5rem;">No Screening Data Found</h2>
-            <p class="hero-description" style="margin-bottom: 1.5rem;">
-                Please upload a retinal fundus image from the screening page to view AI analysis results.
+    <main class="page-container" id="result-container">
+        <!-- No Data Card (Shown if session empty) -->
+        <div class="clinical-card" id="no-data-card" style="display: none; text-align: center; max-width: 600px; margin: 0 auto;">
+            <div class="feature-icon-wrapper" style="margin: 0 auto 1.5rem;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+            </div>
+            <h2 class="section-title" style="font-size: 1.6rem;">No Screening Session Found</h2>
+            <p class="section-description" style="margin-bottom: 2rem;">
+                Please register a patient and upload a retinal fundus photograph to inspect AI screening metrics.
             </p>
-            <a href="/" class="btn-primary" style="display: inline-flex;">Go to Upload Page</a>
+            <a href="/" class="btn-primary-cyan">
+                Start Patient Intake
+            </a>
         </div>
 
-        <!-- Main Result Card -->
-        <div class="glass-card result-card" id="result-card">
-            <div class="result-header">
-                <span class="result-badge">AI Screening Result</span>
-                <h1 class="result-title">Screening Result</h1>
+        <!-- Main Results Display -->
+        <div class="clinical-card" id="result-card">
+            <!-- Header Summary -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1.25rem; margin-bottom: 1.5rem;">
+                <div>
+                    <span class="section-tag" style="margin-bottom: 0.25rem;">Diagnostic Screening Output</span>
+                    <h1 class="section-title" style="font-size: 1.85rem; margin-bottom: 0;">Evaluation Summary</h1>
+                </div>
+                <span style="padding: 0.4rem 0.85rem; border-radius: var(--radius-full); background: rgba(6, 182, 212, 0.12); color: var(--accent-cyan); font-size: 0.82rem; font-weight: 700; border: 1px solid rgba(6, 182, 212, 0.3);">
+                    Architecture: EfficientNet-B0
+                </span>
             </div>
 
-            <!-- Prediction & Confidence Metrics Banner -->
-            <div class="metrics-banner">
+            <!-- Patient Information Bar -->
+            <div class="patient-badge-card" id="result-patient-details">
+                <div class="patient-badge-header">
+                    <div>
+                        <span style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">
+                            Patient Demographics
+                        </span>
+                        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin-top: 2px;">
+                            <span id="result-patient-name">--</span>
+                        </h3>
+                    </div>
+                    <span style="font-size: 0.88rem; color: var(--text-muted);">
+                        Patient ID: <strong style="color: var(--text-primary);" id="result-patient-id">--</strong>
+                    </span>
+                </div>
+
+                <div class="patient-data-grid">
+                    <div class="patient-data-field">
+                        <span class="field-label">Age</span>
+                        <span class="field-value"><span id="result-patient-age">--</span> Years</span>
+                    </div>
+                    <div class="patient-data-field">
+                        <span class="field-label">Location</span>
+                        <span class="field-value" id="result-patient-place">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Metrics (Classification & Confidence) -->
+            <div class="results-metrics-grid">
                 <!-- Metric 1: Predicted Class -->
-                <div class="metric-box">
-                    <div class="metric-label">Predicted Class</div>
-                    <div class="metric-value-class" id="predicted-class">--</div>
-                    <div class="metric-subclass" id="predicted-fullname">Analyzing...</div>
+                <div class="metric-card">
+                    <span class="metric-caption">Detected Retinal Condition</span>
+                    <div class="metric-large-value" id="predicted-class" style="color: var(--accent-cyan);">
+                        --
+                    </div>
+                    <div class="metric-disease-fullname" id="predicted-fullname">
+                        Processing inference...
+                    </div>
                 </div>
 
-                <!-- Metric 2: Confidence Score -->
-                <div class="metric-box">
-                    <div class="metric-label">Confidence</div>
-                    <div class="metric-value-confidence" id="confidence-value">--%</div>
-                    <div class="confidence-bar-bg">
-                        <div class="confidence-bar-fill" id="confidence-bar-fill" style="width: 0%;"></div>
+                <!-- Metric 2: Confidence -->
+                <div class="metric-card">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                        <span class="metric-caption">AI Prediction Confidence</span>
+                        <span class="metric-large-value" id="confidence-value" style="font-size: 1.5rem;">
+                            --%
+                        </span>
                     </div>
+                    <div class="progress-track">
+                        <div class="progress-fill" id="confidence-bar-fill" style="width: 0%;"></div>
+                    </div>
+                    <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.5rem; display: block;">
+                        Softmax probability score computed across all seven trained classes
+                    </span>
                 </div>
             </div>
 
-            <!-- Side-by-Side Image Comparison Grid -->
-            <div class="images-grid">
-                <!-- Panel 1: Original Image -->
-                <div class="image-panel">
-                    <div class="panel-header">
-                        <span class="panel-title">Original Fundus Image</span>
-                        <span class="panel-badge">Input</span>
+            <!-- Visual Evidence: Original Fundus Scan vs Grad-CAM -->
+            <div class="comparison-grid">
+                <!-- Panel 1: Original Scan -->
+                <div class="image-panel-card">
+                    <div class="image-panel-titlebar">
+                        <span>Original Retinal Fundus Scan</span>
+                        <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); background: var(--bg-surface-subtle); padding: 2px 8px; border-radius: var(--radius-full);">
+                            Input Scan
+                        </span>
                     </div>
-                    <div class="image-frame">
+                    <div class="image-display-frame">
                         <img id="original-image" src="" alt="Original Retinal Fundus Image">
                     </div>
                 </div>
 
-                <!-- Panel 2: Grad-CAM Visualization -->
-                <div class="image-panel">
-                    <div class="panel-header">
-                        <span class="panel-title">Grad-CAM Visualization</span>
-                        <span class="panel-badge">Model Explanation</span>
+                <!-- Panel 2: Grad-CAM Activation Heatmap -->
+                <div class="image-panel-card">
+                    <div class="image-panel-titlebar">
+                        <span>Grad-CAM Activation Heatmap</span>
+                        <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--accent-cyan); background: rgba(6, 182, 212, 0.1); padding: 2px 8px; border-radius: var(--radius-full); font-weight: 700;">
+                            Explainable AI
+                        </span>
                     </div>
-                    <div class="image-frame">
+                    <div class="image-display-frame">
                         <img id="gradcam-image" src="" alt="Grad-CAM Attention Map Visualization">
                     </div>
                 </div>
             </div>
 
-            <!-- Explanatory Callout Box -->
-            <div class="explanation-callout">
-                <div class="callout-icon">
+            <!-- Grad-CAM Interpretation Callout -->
+            <div class="clinical-callout">
+                <div class="clinical-callout-icon">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"></circle>
                         <line x1="12" y1="16" x2="12" y2="12"></line>
                         <line x1="12" y1="8" x2="12.01" y2="8"></line>
                     </svg>
                 </div>
-                <div class="callout-content">
-                    <h4>About Grad-CAM Explainability</h4>
-                    <p>The Grad-CAM visualization highlights image regions that contributed to the model's prediction. It is an AI explanation and should not be interpreted as clinical proof.</p>
+                <div class="clinical-callout-text">
+                    <h4>Interpreting the Grad-CAM Heatmap</h4>
+                    <p>
+                        The Grad-CAM visualization highlights pixel regions with highest convolutional gradient magnitude corresponding to the predicted class. Warmer color zones (red/yellow) indicate anatomical structures that strongly influenced the model's classification decision.
+                    </p>
                 </div>
             </div>
 
-            <!-- Action Area: Analyze Another Image -->
-            <div class="action-area" style="margin-top: 1.5rem;">
-                <button type="button" id="analyze-another-btn" class="btn-primary">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="1 4 1 10 7 10"></polyline>
-                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+            <!-- Download PDF Report Section -->
+            <div style="background: var(--bg-surface-subtle); border: 1px solid var(--border-card); border-radius: var(--radius-lg); padding: 2rem; text-align: center; margin-top: 2rem;">
+                <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.4rem;">
+                    Download Standardized PDF Clinical Report
+                </h3>
+                <p style="font-size: 0.9rem; color: var(--text-secondary); max-width: 580px; margin: 0 auto 1.5rem;">
+                    Contains complete patient demographics, original fundus photography, Grad-CAM activation overlay, model version details, and doctor review fields.
+                </p>
+
+                <a id="download-report-btn" class="btn-primary-cyan" href="#" style="padding: 0.75rem 2rem; font-size: 1rem; border-radius: var(--radius-md);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
                     </svg>
-                    Analyze Another Image
+                    Download PDF Report
+                </a>
+
+                <p id="report-message" style="display: none; margin-top: 1rem; font-size: 0.88rem; color: var(--text-muted);" role="status"></p>
+            </div>
+
+            <!-- Actions Row -->
+            <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
+                <button type="button" id="analyze-another-btn" class="btn-outline">
+                    Perform Another Screening
                 </button>
-            </div>
-
-            <!-- Medical Disclaimer Box -->
-            <div class="disclaimer-box">
-                <div class="disclaimer-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
-                    </svg>
-                </div>
-                <div class="disclaimer-text">
-                    <strong>Medical Disclaimer:</strong> VisionX AI provides AI-assisted screening support and does not replace professional clinical judgment or ophthalmological examination.
-                </div>
             </div>
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="app-footer">
-        <p>VisionX AI &copy; 2026 &bull; AI-Assisted Retinal Disease Screening System &bull; MCA Academic Project</p>
+    <footer class="app-footer" style="margin-top: 4rem;">
+        <div class="footer-container" style="text-align: center;">
+            <p>&copy; 2026 VisionX AI &bull; AI-Assisted Eye Screening Prototype &bull; MCA Major Project</p>
+        </div>
     </footer>
 
-    <script src="/static/js/script.js"></script>
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        // Sync theme
+        const themeBtn = document.getElementById('theme-toggle-btn');
+        const iconMoon = document.getElementById('theme-icon-moon');
+        const iconSun = document.getElementById('theme-icon-sun');
+
+        const currentTheme = localStorage.getItem('visionx_theme') || 'light';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        if (themeBtn) {
+            updateThemeIcons(currentTheme);
+            themeBtn.addEventListener('click', () => {
+                const cur = document.documentElement.getAttribute('data-theme');
+                const nxt = cur === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', nxt);
+                localStorage.setItem('visionx_theme', nxt);
+                updateThemeIcons(nxt);
+            });
+        }
+
+        function updateThemeIcons(theme) {
+            if (!iconMoon || !iconSun) return;
+            if (theme === 'dark') {
+                iconMoon.style.display = 'none';
+                iconSun.style.display = 'block';
+            } else {
+                iconMoon.style.display = 'block';
+                iconSun.style.display = 'none';
+            }
+        }
+    </script>
 </body>
+
 </html>

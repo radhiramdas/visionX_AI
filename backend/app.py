@@ -1,151 +1,864 @@
 import os
 import sys
-from flask import Flask, request, jsonify, render_template, send_from_directory
-from PIL import Image, UnidentifiedImageError
+import uuid
+from functools import wraps
 
-# Ensure backend directory is in sys.path for robust module resolution
+from flask import (
+    Flask,
+    request,
+    jsonify,
+    render_template,
+    send_from_directory,
+    send_file,
+    abort,
+    session,
+    redirect,
+    url_for,
+    flash,
+)
+
+from PIL import Image
+from werkzeug.security import check_password_hash
+
+# --------------------------------------------------
+# PROJECT PATHS
+# --------------------------------------------------
+
 current_dir = os.path.dirname(os.path.abspath(__file__))
+
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
 
-# Frontend directories (templates and static assets)
 project_root = os.path.dirname(current_dir)
 frontend_dir = os.path.join(project_root, "frontend")
 template_dir = os.path.join(frontend_dir, "templates")
 static_dir = os.path.join(frontend_dir, "static")
 
+UPLOAD_DIR = os.path.join(current_dir, "uploads")
+REPORT_DIR = os.path.join(current_dir, "reports")
+
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(REPORT_DIR, exist_ok=True)
+
+# --------------------------------------------------
+# PROJECT MODULES
+# --------------------------------------------------
+
 from model_loader import load_model, get_model
 from prediction import predict_with_details
 from gradcam import generate_gradcam, DEFAULT_GENERATED_DIR
 
-# Initialize Flask application pointing to the frontend template and static paths
+from db_operations import (
+    save_patient,
+    get_patient,
+    search_patients,
+    get_all_patients,
+    save_prediction,
+    update_report_path,
+    get_report_path,
+    get_user_by_username_or_email,
+    get_user_by_id,
+    create_user,
+    toggle_user_active_status,
+    get_all_users,
+    create_doctor_account,
+    get_doctor_by_user_id,
+    get_doctor_by_id,
+    get_active_doctors,
+    create_examination,
+    get_examination_details,
+    get_examinations_for_doctor,
+    get_examinations_for_staff,
+    get_all_examinations,
+    get_prediction_by_id,
+    get_admin_dashboard_stats,
+)
+
+from pdf_report import generate_pdf_report
+
+
+# --------------------------------------------------
+# FLASK APPLICATION
+# --------------------------------------------------
+
 app = Flask(
     __name__,
     template_folder=template_dir,
-    static_folder=static_dir
+    static_folder=static_dir,
 )
 
-# Preload the model once at application startup
+# Secure Session Configuration
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "visionx_ai_production_secret_key_2026_mca")
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+
+# Limit uploads to 15 MB
+app.config["MAX_CONTENT_LENGTH"] = 15 * 1024 * 1024
+
+
+# --------------------------------------------------
+# PRELOAD MODEL
+# --------------------------------------------------
+
 try:
     print("[Flask] Initializing model loading...")
     load_model()
-    print("[Flask] Model successfully loaded at startup.")
-except Exception as e:
-    print(f"[Flask Warning] Could not preload model at startup: {e}")
+    print("[Flask] Model successfully loaded.")
+except Exception as error:
+    print(f"[Flask Warning] Model preload failed: {error}")
 
+
+# --------------------------------------------------
+# AUTHENTICATION & ACCESS CONTROL DECORATORS
+# --------------------------------------------------
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "user_id" not in session:
+            if request.is_json:
+                return jsonify({"success": False, "error": "Authentication required."}), 401
+            return redirect(url_for("login_page", next=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def role_required(*allowed_roles):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if "user_id" not in session:
+                if request.is_json:
+                    return jsonify({"success": False, "error": "Authentication required."}), 401
+                return redirect(url_for("login_page", next=request.url))
+
+            user_role = session.get("role")
+            if user_role not in allowed_roles:
+                if request.is_json:
+                    return jsonify({"success": False, "error": "Unauthorized access for your role."}), 403
+                return render_template("403.html", message="You do not have permission to access this portal."), 403
+
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+
+# --------------------------------------------------
+# PUBLIC & AUTH ROUTES
+# --------------------------------------------------
 
 @app.route("/", methods=["GET"])
 def index():
-    """
-    Renders the main VisionX AI fundus screening upload page.
-    """
+    # If user is already authenticated, redirect to their respective dashboard
+    if "user_id" in session:
+        role = session.get("role")
+        if role == "admin":
+            return redirect(url_for("admin_dashboard"))
+        elif role == "staff":
+            return redirect(url_for("staff_dashboard"))
+        elif role == "doctor":
+            return redirect(url_for("doctor_dashboard"))
+
     return render_template("index.html")
 
 
+@app.route("/login", methods=["GET", "POST"])
+def login_page():
+    if request.method == "GET":
+        if "user_id" in session:
+            role = session.get("role")
+            if role == "admin":
+                return redirect(url_for("admin_dashboard"))
+            elif role == "staff":
+                return redirect(url_for("staff_dashboard"))
+            elif role == "doctor":
+                return redirect(url_for("doctor_dashboard"))
+        return render_template("login.html")
+
+    # POST - Handle Login Request
+    data = request.get_json(silent=True) or request.form
+    identifier = str(data.get("identifier", "")).strip()
+    password = str(data.get("password", "")).strip()
+    expected_role = data.get("role")
+
+    if not identifier or not password:
+        msg = "Please provide username/email and password."
+        if request.is_json:
+            return jsonify({"success": False, "error": msg}), 400
+        flash(msg, "error")
+        return render_template("login.html"), 400
+
+    user = get_user_by_username_or_email(identifier)
+    if not user:
+        msg = "Invalid username or password."
+        if request.is_json:
+            return jsonify({"success": False, "error": msg}), 401
+        flash(msg, "error")
+        return render_template("login.html"), 401
+
+    if not user.get("is_active"):
+        msg = "This account has been deactivated. Please contact an administrator."
+        if request.is_json:
+            return jsonify({"success": False, "error": msg}), 403
+        flash(msg, "error")
+        return render_template("login.html"), 403
+
+    if expected_role and user.get("role") != expected_role:
+        msg = f"Account exists, but role is '{user.get('role')}', not '{expected_role}'."
+        if request.is_json:
+            return jsonify({"success": False, "error": msg}), 403
+        flash(msg, "error")
+        return render_template("login.html"), 403
+
+    if not check_password_hash(user["password_hash"], password):
+        msg = "Invalid username or password."
+        if request.is_json:
+            return jsonify({"success": False, "error": msg}), 401
+        flash(msg, "error")
+        return render_template("login.html"), 401
+
+    # Establish authenticated session
+    session.clear()
+    session["user_id"] = user["user_id"]
+    session["username"] = user["username"]
+    session["email"] = user["email"]
+    session["role"] = user["role"]
+
+    # If role is doctor, cache doctor_id
+    if user["role"] == "doctor":
+        doc = get_doctor_by_user_id(user["user_id"])
+        if doc:
+            session["doctor_id"] = doc["doctor_id"]
+            session["full_name"] = doc["full_name"]
+
+    redirect_url = url_for("admin_dashboard") if user["role"] == "admin" else (
+        url_for("staff_dashboard") if user["role"] == "staff" else url_for("doctor_dashboard")
+    )
+
+    if request.is_json:
+        return jsonify({
+            "success": True,
+            "message": "Login successful.",
+            "redirect_url": redirect_url,
+            "role": user["role"]
+        }), 200
+
+    return redirect(redirect_url)
+
+
+@app.route("/logout", methods=["GET", "POST"])
+def logout():
+    session.clear()
+    flash("You have been signed out.", "info")
+    return redirect(url_for("login_page"))
+
+
+# --------------------------------------------------
+# PORTAL 1: ADMIN PORTAL
+# --------------------------------------------------
+
+@app.route("/admin/dashboard", methods=["GET"])
+@role_required("admin")
+def admin_dashboard():
+    stats = get_admin_dashboard_stats()
+    users = get_all_users()
+    recent_examinations = get_all_examinations(limit=10)
+    return render_template(
+        "admin/dashboard.html",
+        stats=stats,
+        users=users,
+        recent_examinations=recent_examinations
+    )
+
+
+@app.route("/admin/users", methods=["GET"])
+@role_required("admin")
+def admin_users_page():
+    users = get_all_users()
+    return render_template("admin/users.html", users=users)
+
+
+@app.route("/admin/create-staff", methods=["POST"])
+@role_required("admin")
+def admin_create_staff():
+    data = request.get_json(silent=True) or request.form
+    username = str(data.get("username", "")).strip()
+    email = str(data.get("email", "")).strip()
+    password = str(data.get("password", "")).strip()
+
+    if not username or not email or not password:
+        return jsonify({"success": False, "error": "Username, email, and password are required."}), 400
+
+    if len(password) < 6:
+        return jsonify({"success": False, "error": "Password must be at least 6 characters."}), 400
+
+    existing = get_user_by_username_or_email(username) or get_user_by_username_or_email(email)
+    if existing:
+        return jsonify({"success": False, "error": "A user with this username or email already exists."}), 400
+
+    user_id = create_user(username, email, password, "staff")
+    if not user_id:
+        return jsonify({"success": False, "error": "Failed to create hospital staff account."}), 500
+
+    return jsonify({"success": True, "message": f"Staff account '{username}' created successfully."}), 201
+
+
+@app.route("/admin/create-admin", methods=["POST"])
+@role_required("admin")
+def admin_create_admin():
+    data = request.get_json(silent=True) or request.form
+    username = str(data.get("username", "")).strip()
+    email = str(data.get("email", "")).strip()
+    password = str(data.get("password", "")).strip()
+
+    if not username or not email or not password:
+        return jsonify({"success": False, "error": "All fields are required."}), 400
+
+    if len(password) < 8:
+        return jsonify({"success": False, "error": "Admin password must be at least 8 characters."}), 400
+
+    existing = get_user_by_username_or_email(username) or get_user_by_username_or_email(email)
+    if existing:
+        return jsonify({"success": False, "error": "A user with this username or email already exists."}), 400
+
+    user_id = create_user(username, email, password, "admin")
+    if not user_id:
+        return jsonify({"success": False, "error": "Failed to create admin account."}), 500
+
+    return jsonify({"success": True, "message": f"Admin account '{username}' created successfully."}), 201
+
+
+@app.route("/admin/create-doctor", methods=["POST"])
+@role_required("admin")
+def admin_create_doctor():
+    data = request.get_json(silent=True) or request.form
+    username = str(data.get("username", "")).strip()
+    email = str(data.get("email", "")).strip()
+    password = str(data.get("password", "")).strip()
+    full_name = str(data.get("full_name", "")).strip()
+    specialization = str(data.get("specialization", "")).strip() or "Ophthalmologist"
+    phone = str(data.get("phone", "")).strip()
+
+    if not username or not email or not password or not full_name:
+        return jsonify({"success": False, "error": "Username, email, password, and doctor full name are required."}), 400
+
+    existing = get_user_by_username_or_email(username) or get_user_by_username_or_email(email)
+    if existing:
+        return jsonify({"success": False, "error": "A user with this username or email already exists."}), 400
+
+    doctor_id = create_doctor_account(username, email, password, full_name, specialization, phone)
+    if not doctor_id:
+        return jsonify({"success": False, "error": "Failed to create doctor account."}), 500
+
+    return jsonify({"success": True, "message": f"Doctor profile for 'Dr. {full_name}' created successfully."}), 201
+
+
+@app.route("/admin/toggle-user-status", methods=["POST"])
+@role_required("admin")
+def admin_toggle_user_status():
+    data = request.get_json(silent=True) or request.form
+    target_user_id = data.get("user_id")
+    is_active = data.get("is_active")
+
+    if target_user_id is None or is_active is None:
+        return jsonify({"success": False, "error": "User ID and status are required."}), 400
+
+    target_user_id = int(target_user_id)
+    is_active = 1 if int(is_active) == 1 else 0
+
+    # Prevent admin self-lockout
+    if target_user_id == session.get("user_id"):
+        return jsonify({"success": False, "error": "Security violation: You cannot deactivate your own admin account."}), 400
+
+    success = toggle_user_active_status(target_user_id, is_active)
+    if success:
+        action_name = "activated" if is_active else "deactivated"
+        return jsonify({"success": True, "message": f"User account has been {action_name}."}), 200
+    return jsonify({"success": False, "error": "Failed to update account status."}), 500
+
+
+@app.route("/admin/examinations", methods=["GET"])
+@role_required("admin")
+def admin_examinations_page():
+    examinations = get_all_examinations(limit=200)
+    return render_template("admin/examinations.html", examinations=examinations)
+
+
+@app.route("/admin/patients", methods=["GET"])
+@role_required("admin")
+def admin_patients_page():
+    patients = get_all_patients(limit=200)
+    return render_template("admin/patients.html", patients=patients)
+
+
+# --------------------------------------------------
+# PORTAL 2: HOSPITAL STAFF PORTAL
+# --------------------------------------------------
+
+@app.route("/staff/dashboard", methods=["GET"])
+@role_required("staff", "admin")
+def staff_dashboard():
+    staff_user_id = session.get("user_id")
+    recent_examinations = get_examinations_for_staff(staff_user_id, limit=20)
+    doctors = get_active_doctors()
+    patients = get_all_patients(limit=15)
+    return render_template(
+        "staff/dashboard.html",
+        recent_examinations=recent_examinations,
+        doctors=doctors,
+        patients=patients,
+    )
+
+
+@app.route("/staff/search-patients", methods=["GET"])
+@role_required("staff", "admin")
+def staff_search_patients():
+    query = request.args.get("q", "").strip()
+    patients = search_patients(query)
+    return jsonify({"success": True, "patients": patients})
+
+
+@app.route("/staff/create-examination", methods=["POST"])
+@role_required("staff", "admin")
+def staff_create_examination():
+    data = request.get_json(silent=True) or request.form
+    patient_id = data.get("patient_id")
+    doctor_id = data.get("doctor_id")
+    notes = data.get("notes", "")
+
+    if not patient_id or not doctor_id:
+        return jsonify({"success": False, "error": "Patient and assigned Doctor must be selected."}), 400
+
+    patient = get_patient(int(patient_id))
+    doctor = get_doctor_by_id(int(doctor_id))
+
+    if not patient:
+        return jsonify({"success": False, "error": "Selected patient record not found."}), 404
+
+    if not doctor or not doctor.get("is_active"):
+        return jsonify({"success": False, "error": "Selected doctor account is not active."}), 400
+
+    staff_user_id = session.get("user_id")
+    examination_id = create_examination(
+        patient_id=int(patient_id),
+        doctor_id=int(doctor_id),
+        staff_user_id=staff_user_id,
+        notes=notes
+    )
+
+    if not examination_id:
+        return jsonify({"success": False, "error": "Failed to create examination session."}), 500
+
+    return jsonify({
+        "success": True,
+        "message": "Examination initialized.",
+        "examination_id": examination_id,
+        "next_url": f"/upload?patient_id={patient_id}&examination_id={examination_id}"
+    }), 201
+
+
+# --------------------------------------------------
+# PORTAL 3: DOCTOR PORTAL
+# --------------------------------------------------
+
+@app.route("/doctor/dashboard", methods=["GET"])
+@role_required("doctor")
+def doctor_dashboard():
+    doctor_id = session.get("doctor_id")
+    if not doctor_id:
+        doc = get_doctor_by_user_id(session["user_id"])
+        if doc:
+            doctor_id = doc["doctor_id"]
+            session["doctor_id"] = doctor_id
+        else:
+            return render_template("403.html", message="Doctor profile not found for this account."), 403
+
+    examinations = get_examinations_for_doctor(doctor_id, limit=50)
+    return render_template("doctor/dashboard.html", examinations=examinations)
+
+
+@app.route("/doctor/examination/<int:examination_id>", methods=["GET"])
+@role_required("doctor")
+def doctor_examination_detail(examination_id):
+    doctor_id = session.get("doctor_id")
+    if not doctor_id:
+        doc = get_doctor_by_user_id(session["user_id"])
+        if doc:
+            doctor_id = doc["doctor_id"]
+            session["doctor_id"] = doctor_id
+        else:
+            return abort(403)
+
+    exam = get_examination_details(examination_id)
+    if not exam:
+        return abort(404)
+
+    # STRICT CLINICAL RESTRICTION: Only assigned doctor can view
+    if exam["doctor_id"] != doctor_id:
+        return render_template("403.html", message="Unauthorized: This examination is assigned to a different clinician."), 403
+
+    return render_template("doctor/examination_detail.html", exam=exam)
+
+
+# --------------------------------------------------
+# PATIENT REGISTRATION (LEGACY & STAFF COMPATIBLE)
+# --------------------------------------------------
+
+@app.route("/register-patient", methods=["POST"])
+def register_patient():
+    data = request.get_json(silent=True) or request.form
+
+    if not isinstance(data, dict):
+        return jsonify({"success": False, "error": "Please provide patient details."}), 400
+
+    patient_name = str(data.get("patient_name", "")).strip()
+    age_value = data.get("age")
+    place = str(data.get("place", "")).strip()
+
+    if not patient_name or len(patient_name) > 150:
+        return jsonify({"success": False, "error": "Patient name is required (max 150 chars)."}), 400
+
+    if not place or len(place) > 150:
+        return jsonify({"success": False, "error": "Place is required (max 150 chars)."}), 400
+
+    try:
+        age = int(age_value)
+        if not 1 <= age <= 120:
+            raise ValueError
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "error": "Please enter a valid age between 1 and 120."}), 400
+
+    try:
+        patient_id = save_patient(patient_name=patient_name, age=age, place=place)
+    except Exception as error:
+        app.logger.exception("Patient registration failed: %s", error)
+        return jsonify({"success": False, "error": "Unable to save patient details in database."}), 500
+
+    if not patient_id:
+        return jsonify({"success": False, "error": "Patient registration failed."}), 500
+
+    return jsonify({
+        "success": True,
+        "message": "Patient registered successfully.",
+        "patient_id": patient_id,
+        "patient": {
+            "patient_id": patient_id,
+            "patient_name": patient_name,
+            "age": age,
+            "place": place,
+        },
+        "next_page": f"/upload?patient_id={patient_id}",
+    }), 201
+
+
+# --------------------------------------------------
+# FUNDUS IMAGE UPLOAD PAGE
+# --------------------------------------------------
+
+@app.route("/upload", methods=["GET"])
+def upload_page():
+    patient_id = request.args.get("patient_id", type=int)
+    examination_id = request.args.get("examination_id", type=int)
+
+    if not patient_id or patient_id < 1:
+        return "Invalid patient ID. Please register or select the patient first.", 400
+
+    try:
+        patient = get_patient(patient_id)
+    except Exception as error:
+        app.logger.exception("Could not retrieve patient: %s", error)
+        return "Unable to retrieve patient details.", 500
+
+    if not patient:
+        return "Patient not found. Please register or select the patient again.", 404
+
+    active_doctors = get_active_doctors()
+
+    return render_template(
+        "upload.html",
+        patient=patient,
+        examination_id=examination_id,
+        doctors=active_doctors
+    )
+
+
+# --------------------------------------------------
+# RESULT PAGE
+# --------------------------------------------------
+
 @app.route("/result", methods=["GET"])
 def result():
-    """
-    Renders the screening results page displaying predictions and Grad-CAM explainability.
-    """
     return render_template("result.html")
 
 
-@app.route("/generated/<path:filename>", methods=["GET"])
-def serve_generated(filename):
-    """
-    Serves generated Grad-CAM images from the backend/generated/ directory.
-    """
-    return send_from_directory(DEFAULT_GENERATED_DIR, filename)
-
+# --------------------------------------------------
+# PREDICT EYE DISEASE
+# --------------------------------------------------
 
 @app.route("/predict", methods=["POST"])
 def handle_predict():
-    """
-    Endpoint for retinal disease prediction and Grad-CAM generation.
-    Accepts an uploaded image file under the 'image' form field.
-    
-    Returns JSON:
-    {
-        "success": true,
-        "prediction": "DR",
-        "confidence": 100.0,
-        "gradcam_image": "gradcam_20261006_102500_a1b2c3d4.jpg"
-    }
-    """
-    # 1. Validate that the 'image' key exists in multipart form files
-    if "image" not in request.files:
+    # 1. Strictly restrict prediction execution: Doctors CANNOT run predictions
+    if "role" in session and session.get("role") == "doctor":
         return jsonify({
             "success": False,
-            "error": "No image file provided in request. Please use form field 'image'."
-        }), 400
+            "error": "Clinicians cannot run predictions directly. Predictions must be performed by intake hospital staff."
+        }), 403
+
+    # 2. Validate patient ID
+    patient_id_value = request.form.get("patient_id", "").strip()
+    examination_id_value = request.form.get("examination_id", "").strip()
+
+    try:
+        patient_id = int(patient_id_value)
+        if patient_id < 1:
+            raise ValueError
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "error": "Valid patient ID is required."}), 400
+
+    examination_id = None
+    if examination_id_value:
+        try:
+            examination_id = int(examination_id_value)
+        except ValueError:
+            pass
+
+    # 3. Retrieve patient
+    patient = get_patient(patient_id)
+    if not patient:
+        return jsonify({"success": False, "error": "Patient not found."}), 404
+
+    # 4. Validate uploaded image
+    if "image" not in request.files:
+        return jsonify({"success": False, "error": "No fundus image was uploaded."}), 400
 
     file = request.files["image"]
+    if not file or not file.filename or not file.filename.strip():
+        return jsonify({"success": False, "error": "Please select a fundus image."}), 400
 
-    # 2. Check for empty filename
-    if not file or file.filename.strip() == "":
-        return jsonify({
-            "success": False,
-            "error": "No file selected for upload."
-        }), 400
+    original_filename = os.path.basename(file.filename)
 
-    # 3. Attempt to open and validate the image using PIL
+    # 5. Verify image validity
     try:
-        image = Image.open(file.stream)
-        # Verify image integrity
-        image.verify()
-        # Reset stream position after verify() as recommended by PIL
         file.stream.seek(0)
-        image = Image.open(file.stream)
-    except (UnidentifiedImageError, OSError, Exception) as img_err:
-        return jsonify({
-            "success": False,
-            "error": f"Uploaded file is not a valid image: {str(img_err)}"
-        }), 400
+        with Image.open(file.stream) as test_image:
+            test_image.verify()
+        file.stream.seek(0)
+        with Image.open(file.stream) as opened_image:
+            image = opened_image.convert("RGB")
+    except Exception:
+        return jsonify({"success": False, "error": "The uploaded file is not a valid image."}), 400
 
-    # 4. Ensure model is loaded
+    # 6. Load model
     try:
         model, device = get_model()
-    except Exception as model_err:
-        return jsonify({
-            "success": False,
-            "error": f"Model loading failed: {str(model_err)}"
-        }), 500
+    except Exception as error:
+        app.logger.exception("Model loading failed: %s", error)
+        return jsonify({"success": False, "error": "The AI model could not be loaded."}), 500
 
-    # 5. Perform inference (obtaining prediction, aligned tensor, and visualization array)
+    # 7. Predict disease
     try:
-        predicted_class, confidence, predicted_idx, input_tensor, rgb_image = predict_with_details(
-            image, model=model, device=device
-        )
-    except Exception as pred_err:
-        return jsonify({
-            "success": False,
-            "error": f"Prediction failed: {str(pred_err)}"
-        }), 500
+        (
+            predicted_class,
+            confidence,
+            predicted_idx,
+            input_tensor,
+            rgb_image,
+        ) = predict_with_details(image, model=model, device=device)
+    except Exception as error:
+        app.logger.exception("Prediction failed: %s", error)
+        return jsonify({"success": False, "error": "Prediction failed. Please try another image."}), 500
 
-    # 6. Generate Grad-CAM visualization for the predicted class
+    # 8. Generate Grad-CAM heatmap
     try:
         gradcam_filename = generate_gradcam(
             model=model,
             input_tensor=input_tensor,
             rgb_image=rgb_image,
             target_class_idx=predicted_idx,
-            output_dir=DEFAULT_GENERATED_DIR
+            output_dir=DEFAULT_GENERATED_DIR,
         )
-    except Exception as cam_err:
-        return jsonify({
-            "success": False,
-            "error": f"Grad-CAM generation failed: {str(cam_err)}"
-        }), 500
+    except Exception as error:
+        app.logger.exception("Grad-CAM generation failed: %s", error)
+        return jsonify({"success": False, "error": "Could not generate Grad-CAM heatmap."}), 500
 
-    # 7. Return successful JSON response
+    # 9. Save uploaded image safely
+    try:
+        extension = os.path.splitext(original_filename)[1].lower()
+        if extension not in (".jpg", ".jpeg", ".png", ".webp"):
+            extension = ".jpg"
+
+        saved_filename = f"{uuid.uuid4().hex}{extension}"
+        saved_image_path = os.path.join(UPLOAD_DIR, saved_filename)
+        image_format = {".png": "PNG", ".webp": "WEBP"}.get(extension, "JPEG")
+        image.save(saved_image_path, format=image_format)
+    except Exception as error:
+        app.logger.exception("Image saving failed: %s", error)
+        return jsonify({"success": False, "error": "Could not save uploaded image."}), 500
+
+    # 10. Record in MySQL (eye_images & ai_predictions)
+    try:
+        prediction_id = save_prediction(
+            image_name=original_filename,
+            image_path=os.path.relpath(saved_image_path, project_root),
+            detected_disease=predicted_class,
+            confidence_score=confidence,
+            model_version="EfficientNetB0",
+            heatmap_url=gradcam_filename,
+            patient_id=patient_id,
+            examination_id=examination_id
+        )
+    except Exception as error:
+        app.logger.exception("Saving prediction failed: %s", error)
+        return jsonify({"success": False, "error": "Could not save prediction to database."}), 500
+
+    if not prediction_id:
+        return jsonify({"success": False, "error": "Prediction record could not be saved."}), 500
+
+    # 11. Generate PDF Clinical Report
+    report_url = None
+    report_error = None
+    try:
+        gradcam_path = os.path.join(DEFAULT_GENERATED_DIR, os.path.basename(gradcam_filename))
+
+        # Retrieve examination context if available
+        doctor_name = "Clinical Review Pool"
+        staff_username = session.get("username", "Hospital Staff")
+        if examination_id:
+            exam_data = get_examination_details(examination_id)
+            if exam_data:
+                doctor_name = exam_data.get("doctor_name", doctor_name)
+                staff_username = exam_data.get("staff_username", staff_username)
+
+        pdf_path = generate_pdf_report(
+            prediction_id=prediction_id,
+            image_name=original_filename,
+            original_image_path=saved_image_path,
+            predicted_disease=predicted_class,
+            confidence=confidence,
+            gradcam_image_path=gradcam_path,
+            model_version="EfficientNetB0",
+            patient_name=patient["patient_name"],
+            patient_age=patient["age"],
+            patient_place=patient["place"],
+            patient_id=patient_id,
+            examination_id=examination_id or "N/A",
+            doctor_name=doctor_name,
+            staff_username=staff_username
+        )
+
+        if pdf_path and os.path.isfile(pdf_path):
+            relative_report_path = os.path.relpath(pdf_path, project_root)
+            updated = update_report_path(prediction_id, relative_report_path)
+            if updated:
+                report_url = f"/download-report/{prediction_id}"
+            else:
+                report_error = "Could not link report in database."
+        else:
+            report_error = "PDF generator did not produce a file on disk."
+    except Exception as error:
+        report_error = f"PDF generation failed: {error}"
+        app.logger.exception("PDF report generation failed: %s", error)
+
     return jsonify({
         "success": True,
+        "patient": {
+            "patient_id": patient_id,
+            "patient_name": patient["patient_name"],
+            "age": patient["age"],
+            "place": patient["place"],
+        },
         "prediction": predicted_class,
         "confidence": confidence,
-        "gradcam_image": gradcam_filename
+        "gradcam_image": gradcam_filename,
+        "prediction_id": prediction_id,
+        "examination_id": examination_id,
+        "report_url": report_url,
+        "report_error": report_error,
     }), 200
 
 
+# --------------------------------------------------
+# SERVE GRAD-CAM IMAGES (AUTHENTICATED / PROTECTED)
+# --------------------------------------------------
+
+@app.route("/generated/<path:filename>", methods=["GET"])
+def serve_generated(filename):
+    # Ensure safe path traversal
+    safe_path = os.path.realpath(os.path.join(DEFAULT_GENERATED_DIR, filename))
+    if not safe_path.startswith(os.path.realpath(DEFAULT_GENERATED_DIR)):
+        abort(403)
+
+    return send_from_directory(DEFAULT_GENERATED_DIR, filename)
+
+
+# --------------------------------------------------
+# DOWNLOAD PDF REPORT (STRICT AUTHORIZATION CHECKS)
+# --------------------------------------------------
+
+@app.route("/download-report/<int:prediction_id>", methods=["GET"])
+def download_report(prediction_id):
+    pred = get_prediction_by_id(prediction_id)
+    if not pred or not pred.get("report_path"):
+        return jsonify({"success": False, "error": "Report not found."}), 404
+
+    # Strict Doctor Authorization Check: If caller is a logged in doctor, verify assignment
+    if "role" in session and session.get("role") == "doctor":
+        caller_doc_id = session.get("doctor_id")
+        if pred.get("doctor_id") and pred["doctor_id"] != caller_doc_id:
+            abort(403)
+
+    report_path = pred["report_path"]
+    reports_dir = os.path.realpath(REPORT_DIR)
+
+    if os.path.isabs(report_path):
+        resolved_path = os.path.realpath(report_path)
+    else:
+        resolved_path = os.path.realpath(os.path.join(project_root, report_path))
+
+    # Path traversal validation
+    try:
+        if os.path.commonpath([reports_dir, resolved_path]) != reports_dir:
+            abort(403)
+    except ValueError:
+        abort(403)
+
+    if not os.path.isfile(resolved_path):
+        return jsonify({"success": False, "error": "Report file is missing from disk."}), 404
+
+    return send_file(
+        resolved_path,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"VisionX_AI_Report_{prediction_id}.pdf",
+    )
+
+
+# --------------------------------------------------
+# ERROR HANDLERS
+# --------------------------------------------------
+
+@app.errorhandler(403)
+def forbidden(e):
+    return render_template("403.html", message="Access Forbidden: You do not have permission to view this resource."), 403
+
+
+@app.errorhandler(404)
+def not_found(e):
+    return render_template("404.html"), 404
+
+
+@app.errorhandler(413)
+def file_too_large(error):
+    return jsonify({"success": False, "error": "Image is too large. Maximum size is 15 MB."}), 413
+
+
+# --------------------------------------------------
+# RUN APPLICATION
+# --------------------------------------------------
+
 if __name__ == "__main__":
-    # Run the Flask development server on localhost:5000
-    app.run(host="127.0.0.1", port=5000, debug=False)
+    app.run(
+        host="127.0.0.1",
+        port=5000,
+        debug=False,
+    )

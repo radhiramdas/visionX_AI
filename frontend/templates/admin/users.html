@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Accounts — Admin — VisionX AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <header class="app-navbar">
+        <div class="nav-container">
+            <a href="/admin/dashboard" class="brand-group">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M2 12c1.73-4.39 6-7.5 10-7.5s8.27 3.11 10 7.5c-1.73 4.39-6 7.5-10 7.5S3.73 16.39 2 12z"></path>
+                    </svg>
+                </div>
+                <div class="brand-title">VisionX <span class="brand-accent">Admin</span></div>
+            </a>
+            <ul class="nav-links">
+                <li><a href="/admin/dashboard" class="nav-item">Dashboard</a></li>
+                <li><a href="/admin/users" class="nav-item active">Users</a></li>
+                <li><a href="/admin/examinations" class="nav-item">Examinations</a></li>
+                <li><a href="/admin/patients" class="nav-item">Patients</a></li>
+            </ul>
+            <div class="nav-actions">
+                <a href="/logout" class="btn-outline">Sign Out</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-container" style="max-width: 1280px;">
+        <div class="clinical-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="font-size: 1.4rem; font-weight: 700; color: var(--text-primary);">All System User Accounts</h2>
+                <a href="/admin/dashboard" class="btn-primary-cyan" style="padding: 0.4rem 1rem; font-size: 0.85rem;">+ Create Account</a>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border-subtle); color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">
+                            <th style="padding: 0.75rem 1rem;">User ID</th>
+                            <th style="padding: 0.75rem 1rem;">Username</th>
+                            <th style="padding: 0.75rem 1rem;">Email</th>
+                            <th style="padding: 0.75rem 1rem;">Role</th>
+                            <th style="padding: 0.75rem 1rem;">Linked Doctor Profile</th>
+                            <th style="padding: 0.75rem 1rem;">Status</th>
+                            <th style="padding: 0.75rem 1rem;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr style="border-bottom: 1px solid var(--border-subtle);">
+                            <td style="padding: 0.85rem 1rem; font-weight: 700;">#{{ u.user_id }}</td>
+                            <td style="padding: 0.85rem 1rem; font-weight: 600; color: var(--text-primary);">{{ u.username }}</td>
+                            <td style="padding: 0.85rem 1rem; color: var(--text-secondary);">{{ u.email }}</td>
+                            <td style="padding: 0.85rem 1rem;">
+                                <span style="padding: 0.2rem 0.6rem; border-radius: var(--radius-full); font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+                                    {% if u.role == 'admin' %}background: rgba(15, 23, 42, 0.1); color: var(--accent-navy);
+                                    {% elif u.role == 'doctor' %}background: rgba(14, 165, 233, 0.12); color: var(--accent-blue);
+                                    {% else %}background: rgba(16, 185, 129, 0.12); color: var(--color-success);{% endif %}">
+                                    {{ u.role }}
+                                </span>
+                            </td>
+                            <td style="padding: 0.85rem 1rem; color: var(--text-secondary);">
+                                {% if u.doctor_name %}Dr. {{ u.doctor_name }} ({{ u.specialization }}){% else %}—{% endif %}
+                            </td>
+                            <td style="padding: 0.85rem 1rem;">
+                                {% if u.is_active %}<span style="color: var(--color-success); font-weight: 600;">&bull; Active</span>
+                                {% else %}<span style="color: var(--color-danger); font-weight: 600;">&bull; Deactivated</span>{% endif %}
+                            </td>
+                            <td style="padding: 0.85rem 1rem;">
+                                {% if u.user_id != session.user_id %}
+                                <button type="button" class="btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.78rem;"
+                                    onclick="toggleUserStatus({{ u.user_id }}, {{ 0 if u.is_active else 1 }})">
+                                    {{ "Deactivate" if u.is_active else "Activate" }}
+                                </button>
+                                {% else %}
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">(Current Session)</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        async function toggleUserStatus(userId, newStatus) {
+            if (!confirm(`Are you sure you want to ${newStatus === 1 ? 'activate' : 'deactivate'} this user account?`)) return;
+            try {
+                const res = await fetch('/admin/toggle-user-status', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({user_id: userId, is_active: newStatus})
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    alert(data.error || "Status update failed.");
+                } else {
+                    window.location.reload();
+                }
+            } catch (err) {
+                alert("Network error.");
+            }
+        }
+    </script>
+</body>
+</html>

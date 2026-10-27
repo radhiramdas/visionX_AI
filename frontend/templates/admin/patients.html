@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patients Registry — Admin — VisionX AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <header class="app-navbar">
+        <div class="nav-container">
+            <a href="/admin/dashboard" class="brand-group">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M2 12c1.73-4.39 6-7.5 10-7.5s8.27 3.11 10 7.5c-1.73 4.39-6 7.5-10 7.5S3.73 16.39 2 12z"></path>
+                    </svg>
+                </div>
+                <div class="brand-title">VisionX <span class="brand-accent">Admin</span></div>
+            </a>
+            <ul class="nav-links">
+                <li><a href="/admin/dashboard" class="nav-item">Dashboard</a></li>
+                <li><a href="/admin/users" class="nav-item">Users</a></li>
+                <li><a href="/admin/examinations" class="nav-item">Examinations</a></li>
+                <li><a href="/admin/patients" class="nav-item active">Patients</a></li>
+            </ul>
+            <div class="nav-actions">
+                <a href="/logout" class="btn-outline">Sign Out</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-container" style="max-width: 1280px;">
+        <div class="clinical-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="font-size: 1.4rem; font-weight: 700; color: var(--text-primary);">Registered Patient Database</h2>
+                <span style="font-size: 0.85rem; color: var(--text-muted);">Total: {{ patients|length }} Patients</span>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border-subtle); color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">
+                            <th style="padding: 0.75rem 1rem;">Patient ID</th>
+                            <th style="padding: 0.75rem 1rem;">Full Name</th>
+                            <th style="padding: 0.75rem 1rem;">Age</th>
+                            <th style="padding: 0.75rem 1rem;">Location / Clinic</th>
+                            <th style="padding: 0.75rem 1rem;">Registration Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in patients %}
+                        <tr style="border-bottom: 1px solid var(--border-subtle);">
+                            <td style="padding: 0.85rem 1rem; font-weight: 700;">#{{ p.patient_id }}</td>
+                            <td style="padding: 0.85rem 1rem; font-weight: 600; color: var(--text-primary);">{{ p.patient_name }}</td>
+                            <td style="padding: 0.85rem 1rem;">{{ p.age }} Years</td>
+                            <td style="padding: 0.85rem 1rem; color: var(--text-secondary);">{{ p.place }}</td>
+                            <td style="padding: 0.85rem 1rem; font-size: 0.82rem; color: var(--text-muted);">{{ p.created_at }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

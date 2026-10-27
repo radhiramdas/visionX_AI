@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Fundus Image - VisionX AI</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Header Navigation -->
+    <header class="app-navbar">
+        <div class="nav-container">
+            <a href="/" class="brand-group">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M2 12c1.73-4.39 6-7.5 10-7.5s8.27 3.11 10 7.5c-1.73 4.39-6 7.5-10 7.5S3.73 16.39 2 12z"></path>
+                    </svg>
+                </div>
+                <div class="brand-title">
+                    VisionX <span class="brand-accent">AI</span>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <button type="button" class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle Dark/Light Mode">
+                    <svg id="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                <a href="/" class="btn-outline">
+                    &larr; Change Patient
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-container">
+        <!-- Page Header -->
+        <div class="page-header-box">
+            <span class="section-tag">Step 02 &bull; Retinal Imaging Analysis</span>
+            <h1 class="section-title">Upload Retinal Fundus Scan</h1>
+            <p class="section-description">
+                Upload a high-resolution fundus photograph to perform 7-class AI screening powered by EfficientNet-B0 with Grad-CAM visual heatmaps.
+            </p>
+        </div>
+
+        <section class="clinical-card">
+            <!-- Active Patient Details Banner -->
+            <div class="patient-badge-card">
+                <div class="patient-badge-header">
+                    <div>
+                        <span style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; color: var(--accent-cyan); letter-spacing: 0.5px;">
+                            Active Patient Record
+                        </span>
+                        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin-top: 2px;">
+                            <span id="patient-name">{{ patient.patient_name }}</span>
+                        </h3>
+                    </div>
+                    <span style="padding: 0.3rem 0.75rem; border-radius: var(--radius-full); background: rgba(16, 185, 129, 0.12); color: var(--color-success); font-size: 0.82rem; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.3);">
+                        &check; Verified in MySQL
+                    </span>
+                </div>
+
+                <div class="patient-data-grid">
+                    <div class="patient-data-field">
+                        <span class="field-label">Patient ID</span>
+                        <span class="field-value" id="patient-id">#{{ patient.patient_id }}</span>
+                    </div>
+                    <div class="patient-data-field">
+                        <span class="field-label">Age</span>
+                        <span class="field-value"><span id="patient-age">{{ patient.age }}</span> Years</span>
+                    </div>
+                    <div class="patient-data-field">
+                        <span class="field-label">Location / Clinic</span>
+                        <span class="field-value" id="patient-place">{{ patient.place }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Banner -->
+            <div id="error-banner" class="alert-banner error" style="display: none;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span id="error-message"></span>
+            </div>
+
+            <!-- Form Upload -->
+            <form id="upload-form" enctype="multipart/form-data">
+                <div class="retinal-dropzone" id="dropzone" onclick="document.getElementById('fundus-image').click();">
+                    <div class="retinal-dropzone-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                    </div>
+
+                    <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.35rem;">
+                        Select Retinal Fundus Photograph
+                    </h3>
+                    <p style="font-size: 0.92rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+                        Click here to browse your device or drag and drop image file
+                    </p>
+                    <span class="btn-outline" style="border-radius: var(--radius-md);">
+                        Browse Fundus File
+                    </span>
+
+                    <input type="file" id="fundus-image" name="image" accept="image/jpeg,image/png,image/webp" style="display: none;" required>
+                </div>
+
+                <div style="text-align: center; margin-top: 0.75rem;">
+                    <small style="color: var(--text-muted);">
+                        Supported Formats: JPG, JPEG, PNG, WebP &bull; Maximum file size: 15 MB
+                    </small>
+                </div>
+
+                <!-- Preview Area -->
+                <div id="preview-container" style="display: none; margin-top: 1.75rem; text-align: center;">
+                    <div style="max-width: 440px; margin: 0 auto; background: #020617; padding: 10px; border-radius: var(--radius-lg); border: 1px solid var(--border-card);">
+                        <img id="image-preview" src="" alt="Selected Retinal Preview" style="max-height: 320px; margin: 0 auto; border-radius: var(--radius-md);">
+                    </div>
+                    <button type="button" class="btn-outline" style="margin-top: 1rem;" onclick="document.getElementById('fundus-image').click();">
+                        Change Image
+                    </button>
+                </div>
+
+                <!-- Action Button -->
+                <div style="margin-top: 2rem;">
+                    <button type="submit" id="analyze-btn" class="btn-primary-cyan" style="width: 100%; padding: 0.95rem; font-size: 1.05rem; border-radius: var(--radius-md);">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        Execute AI Retinal Screening
+                    </button>
+                </div>
+            </form>
+
+            <!-- Loading Indicator -->
+            <div id="loading-message" style="display: none; text-align: center; padding: 2.5rem 1rem;">
+                <div class="spinner-circle"></div>
+                <h4 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.35rem;">
+                    Analyzing Retinal Fundus Scan...
+                </h4>
+                <p style="font-size: 0.9rem; color: var(--text-muted);">
+                    Computing EfficientNet-B0 inference probabilities & generating Grad-CAM activation heatmap
+                </p>
+            </div>
+
+            <!-- Disclaimer -->
+            <div class="clinical-callout">
+                <div class="clinical-callout-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+                    </svg>
+                </div>
+                <div class="clinical-callout-text">
+                    <h4>Clinical Notice</h4>
+                    <p>
+                        VisionX AI analyzes optical patterns for screening assistance. Output scores must be corroborated with full slit-lamp examinations and specialist clinical judgment.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer" style="margin-top: 4rem;">
+        <div class="footer-container" style="text-align: center;">
+            <p>&copy; 2026 VisionX AI &bull; AI-Assisted Eye Screening Prototype &bull; MCA Major Project</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+    <script>
+        // Sync theme
+        const themeBtn = document.getElementById('theme-toggle-btn');
+        const iconMoon = document.getElementById('theme-icon-moon');
+        const iconSun = document.getElementById('theme-icon-sun');
+
+        const currentTheme = localStorage.getItem('visionx_theme') || 'light';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        if (themeBtn) {
+            updateThemeIcons(currentTheme);
+            themeBtn.addEventListener('click', () => {
+                const cur = document.documentElement.getAttribute('data-theme');
+                const nxt = cur === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', nxt);
+                localStorage.setItem('visionx_theme', nxt);
+                updateThemeIcons(nxt);
+            });
+        }
+
+        function updateThemeIcons(theme) {
+            if (!iconMoon || !iconSun) return;
+            if (theme === 'dark') {
+                iconMoon.style.display = 'none';
+                iconSun.style.display = 'block';
+            } else {
+                iconMoon.style.display = 'block';
+                iconSun.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+
+</html>

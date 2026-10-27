@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>403 Forbidden — VisionX AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg-base); text-align: center; padding: 2rem;">
+    <div class="clinical-card" style="max-width: 520px; width: 100%;">
+        <div style="width: 60px; height: 60px; border-radius: 50%; background: rgba(239, 68, 68, 0.12); color: var(--color-danger); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+            </svg>
+        </div>
+        <h1 class="section-title" style="font-size: 1.8rem; margin-bottom: 0.5rem;">Access Forbidden</h1>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+            {{ message or "You do not have administrative or clinical privileges to access this resource." }}
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+            <a href="/" class="btn-outline">Return to Home</a>
+            <a href="/login" class="btn-primary-cyan">Sign In with Permitted Role</a>
+        </div>
+    </div>
+</body>
+</html>

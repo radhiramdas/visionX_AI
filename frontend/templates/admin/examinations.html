@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Examinations — Admin — VisionX AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <header class="app-navbar">
+        <div class="nav-container">
+            <a href="/admin/dashboard" class="brand-group">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M2 12c1.73-4.39 6-7.5 10-7.5s8.27 3.11 10 7.5c-1.73 4.39-6 7.5-10 7.5S3.73 16.39 2 12z"></path>
+                    </svg>
+                </div>
+                <div class="brand-title">VisionX <span class="brand-accent">Admin</span></div>
+            </a>
+            <ul class="nav-links">
+                <li><a href="/admin/dashboard" class="nav-item">Dashboard</a></li>
+                <li><a href="/admin/users" class="nav-item">Users</a></li>
+                <li><a href="/admin/examinations" class="nav-item active">Examinations</a></li>
+                <li><a href="/admin/patients" class="nav-item">Patients</a></li>
+            </ul>
+            <div class="nav-actions">
+                <a href="/logout" class="btn-outline">Sign Out</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-container" style="max-width: 1280px;">
+        <div class="clinical-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="font-size: 1.4rem; font-weight: 700; color: var(--text-primary);">All Clinical Examinations</h2>
+                <span style="font-size: 0.85rem; color: var(--text-muted);">Total: {{ examinations|length }}</span>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border-subtle); color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">
+                            <th style="padding: 0.75rem 1rem;">ID</th>
+                            <th style="padding: 0.75rem 1rem;">Patient</th>
+                            <th style="padding: 0.75rem 1rem;">Doctor</th>
+                            <th style="padding: 0.75rem 1rem;">Staff</th>
+                            <th style="padding: 0.75rem 1rem;">Exam Date</th>
+                            <th style="padding: 0.75rem 1rem;">AI Detected</th>
+                            <th style="padding: 0.75rem 1rem;">Confidence</th>
+                            <th style="padding: 0.75rem 1rem;">Report</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ex in examinations %}
+                        <tr style="border-bottom: 1px solid var(--border-subtle);">
+                            <td style="padding: 0.85rem 1rem; font-weight: 700;">#{{ ex.examination_id }}</td>
+                            <td style="padding: 0.85rem 1rem; font-weight: 600;">{{ ex.patient_name }}</td>
+                            <td style="padding: 0.85rem 1rem;">Dr. {{ ex.doctor_name }}</td>
+                            <td style="padding: 0.85rem 1rem; color: var(--text-secondary);">{{ ex.staff_username or "—" }}</td>
+                            <td style="padding: 0.85rem 1rem; font-size: 0.82rem; color: var(--text-muted);">{{ ex.examined_at }}</td>
+                            <td style="padding: 0.85rem 1rem;">
+                                {% if ex.detected_disease %}<strong style="color: var(--accent-cyan);">{{ ex.detected_disease }}</strong>{% else %}Pending{% endif %}
+                            </td>
+                            <td style="padding: 0.85rem 1rem;">
+                                {% if ex.confidence_score is not none %}{{ "%.1f"|format(ex.confidence_score * 100) }}%{% else %}—{% endif %}
+                            </td>
+                            <td style="padding: 0.85rem 1rem;">
+                                {% if ex.report_path %}
+                                <a href="/download-report/{{ ex.prediction_id }}" class="btn-outline" style="padding: 2px 8px; font-size: 0.75rem;">Download</a>
+                                {% else %}—{% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

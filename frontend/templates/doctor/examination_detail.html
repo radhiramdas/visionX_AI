@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examination #{{ exam.examination_id }} — Clinical Review — VisionX AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Top Header -->
+    <header class="app-navbar">
+        <div class="nav-container">
+            <a href="/doctor/dashboard" class="brand-group">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M2 12c1.73-4.39 6-7.5 10-7.5s8.27 3.11 10 7.5c-1.73 4.39-6 7.5-10 7.5S3.73 16.39 2 12z"></path>
+                    </svg>
+                </div>
+                <div class="brand-title">
+                    VisionX <span class="brand-accent">Doctor Workstation</span>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <a href="/doctor/dashboard" class="btn-outline">
+                    &larr; Back to Assigned Queue
+                </a>
+                <a href="/logout" class="btn-outline" style="padding: 0.45rem 1rem;">
+                    Sign Out
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-container">
+        <div class="clinical-card">
+            <!-- Header Bar -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1.25rem; margin-bottom: 1.5rem;">
+                <div>
+                    <span class="section-tag" style="margin-bottom: 0.25rem;">Physician Case Evaluation</span>
+                    <h1 class="section-title" style="font-size: 1.85rem; margin-bottom: 0;">Examination Case #{{ exam.examination_id }}</h1>
+                </div>
+                <span style="padding: 0.4rem 0.85rem; border-radius: var(--radius-full); background: rgba(16, 185, 129, 0.12); color: var(--color-success); font-size: 0.82rem; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.3);">
+                    &check; Authorized Clinician View
+                </span>
+            </div>
+
+            <!-- Patient Information Card -->
+            <div class="patient-badge-card">
+                <div class="patient-badge-header">
+                    <div>
+                        <span class="field-label">Patient Demographics</span>
+                        <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin-top: 2px;">
+                            {{ exam.patient_name }}
+                        </h3>
+                    </div>
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">
+                        Patient ID: <strong style="color: var(--text-primary);">#{{ exam.patient_id }}</strong>
+                    </span>
+                </div>
+
+                <div class="patient-data-grid">
+                    <div class="patient-data-field">
+                        <span class="field-label">Age</span>
+                        <span class="field-value">{{ exam.patient_age }} Years</span>
+                    </div>
+                    <div class="patient-data-field">
+                        <span class="field-label">Location / Clinic</span>
+                        <span class="field-value">{{ exam.patient_place }}</span>
+                    </div>
+                    <div class="patient-data-field">
+                        <span class="field-label">Intake Staff Member</span>
+                        <span class="field-value">{{ exam.staff_username or "Hospital Staff" }}</span>
+                    </div>
+                    <div class="patient-data-field">
+                        <span class="field-label">Examined At</span>
+                        <span class="field-value" style="font-size: 0.95rem;">{{ exam.examined_at }}</span>
+                    </div>
+                </div>
+
+                {% if exam.notes %}
+                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border-subtle); font-size: 0.88rem; color: var(--text-secondary);">
+                    <strong>Staff Notes:</strong> {{ exam.notes }}
+                </div>
+                {% endif %}
+            </div>
+
+            {% if exam.detected_disease %}
+            <!-- AI Metrics -->
+            <div class="results-metrics-grid">
+                <div class="metric-card">
+                    <span class="metric-caption">Detected Retinal Disease</span>
+                    <div class="metric-large-value" style="color: var(--accent-cyan);">
+                        {{ exam.detected_disease }}
+                    </div>
+                    <div class="metric-disease-fullname">
+                        Model: {{ exam.model_version or "EfficientNetB0" }}
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                        <span class="metric-caption">AI Prediction Confidence</span>
+                        <span class="metric-large-value" style="font-size: 1.5rem;">
+                            {{ "%.2f"|format(exam.confidence_score * 100) }}%
+                        </span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-fill" style="width: {{ exam.confidence_score * 100 }}%;"></div>
+                    </div>
+                    <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.5rem; display: block;">
+                        Computed probability across seven retinal classifications
+                    </span>
+                </div>
+            </div>
+
+            <!-- Visual Evidence: Fundus Image vs Grad-CAM -->
+            <div class="comparison-grid">
+                <div class="image-panel-card">
+                    <div class="image-panel-titlebar">
+                        <span>Original Retinal Fundus Scan</span>
+                        <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Input</span>
+                    </div>
+                    <div class="image-display-frame">
+                        {% if exam.image_path %}
+                        <img src="/{{ exam.image_path }}" alt="Original Fundus Scan">
+                        {% else %}
+                        <p style="color: var(--text-muted);">Image file not accessible.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="image-panel-card">
+                    <div class="image-panel-titlebar">
+                        <span>Grad-CAM Activation Heatmap</span>
+                        <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--accent-cyan); font-weight: 700;">Explainable AI</span>
+                    </div>
+                    <div class="image-display-frame">
+                        {% if exam.heatmap_url %}
+                        <img src="/generated/{{ exam.heatmap_url }}" alt="Grad-CAM Heatmap">
+                        {% else %}
+                        <p style="color: var(--text-muted);">Grad-CAM heatmap not generated.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- PDF Download Option -->
+            {% if exam.prediction_id %}
+            <div style="text-align: center; margin-top: 2rem; padding: 1.5rem; background: var(--bg-surface-subtle); border-radius: var(--radius-lg); border: 1px solid var(--border-subtle);">
+                <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">Standardized Clinical PDF Report</h4>
+                <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+                    Download the complete archival clinical summary including patient history, visual evidence, and model parameters.
+                </p>
+                <a href="/download-report/{{ exam.prediction_id }}" class="btn-primary-cyan" style="padding: 0.65rem 1.75rem; font-size: 0.95rem; border-radius: var(--radius-md);">
+                    Download Clinical PDF Report
+                </a>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <!-- Awaiting Scan Warning -->
+            <div style="text-align: center; padding: 3rem 1rem;">
+                <p style="color: var(--color-warning); font-size: 1.1rem; font-weight: 600;">
+                    Fundus photography has not yet been processed for this examination.
+                </p>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">
+                    Intake staff will upload the fundus scan and trigger AI inference.
+                </p>
+            </div>
+            {% endif %}
+
+            <!-- Clinical Disclaimer -->
+            <div class="clinical-callout" style="margin-top: 2rem;">
+                <div class="clinical-callout-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+                    </svg>
+                </div>
+                <div class="clinical-callout-text">
+                    <h4>Clinical Decision Support Notice</h4>
+                    <p>
+                        This dashboard provides AI screening assistance. Predictions must be verified by the ophthalmologist in combination with direct biomicroscopy, optical coherence tomography (OCT), or fluorescein angiography.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

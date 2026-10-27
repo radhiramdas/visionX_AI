@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Clinical Workstation — VisionX AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Doctor Header -->
+    <header class="app-navbar">
+        <div class="nav-container">
+            <a href="/doctor/dashboard" class="brand-group">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M2 12c1.73-4.39 6-7.5 10-7.5s8.27 3.11 10 7.5c-1.73 4.39-6 7.5-10 7.5S3.73 16.39 2 12z"></path>
+                    </svg>
+                </div>
+                <div class="brand-title">
+                    VisionX <span class="brand-accent">Doctor Workstation</span>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <span style="font-size: 0.88rem; color: var(--text-muted); font-weight: 500;">
+                    Clinician: <strong style="color: var(--text-primary);">Dr. {{ session.full_name or session.username }}</strong>
+                </span>
+                <a href="/logout" class="btn-outline" style="padding: 0.45rem 1.1rem;">
+                    Sign Out
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-container" style="max-width: 1280px;">
+        <div class="page-header-box" style="text-align: left; margin-bottom: 2rem;">
+            <span class="section-tag">Ophthalmology Review Workspace</span>
+            <h1 class="section-title" style="font-size: 2rem; margin-bottom: 0.25rem;">Assigned Clinical Examinations</h1>
+            <p class="section-description" style="margin: 0;">
+                Review retinal scans, AI classification inferences, and Grad-CAM activation heatmaps strictly for your assigned patients.
+            </p>
+        </div>
+
+        <!-- Examination List -->
+        <div class="clinical-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">
+                    Patient Queue & Evaluation History
+                </h3>
+                <span style="padding: 0.25rem 0.75rem; border-radius: var(--radius-full); background: rgba(14, 165, 233, 0.1); color: var(--accent-blue); font-size: 0.82rem; font-weight: 700;">
+                    Total Assigned: {{ examinations|length }}
+                </span>
+            </div>
+
+            {% if examinations %}
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border-subtle); color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px;">
+                            <th style="padding: 0.75rem 1rem;">Exam #</th>
+                            <th style="padding: 0.75rem 1rem;">Patient Name</th>
+                            <th style="padding: 0.75rem 1rem;">Age / Location</th>
+                            <th style="padding: 0.75rem 1rem;">Exam Date</th>
+                            <th style="padding: 0.75rem 1rem;">AI Detected Condition</th>
+                            <th style="padding: 0.75rem 1rem;">AI Confidence</th>
+                            <th style="padding: 0.75rem 1rem;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ex in examinations %}
+                        <tr style="border-bottom: 1px solid var(--border-subtle);">
+                            <td style="padding: 0.85rem 1rem; font-weight: 700;">#{{ ex.examination_id }}</td>
+                            <td style="padding: 0.85rem 1rem; font-weight: 700; color: var(--text-primary);">
+                                {{ ex.patient_name }}
+                            </td>
+                            <td style="padding: 0.85rem 1rem; color: var(--text-secondary);">
+                                {{ ex.patient_age }}y &bull; {{ ex.patient_place }}
+                            </td>
+                            <td style="padding: 0.85rem 1rem; color: var(--text-muted); font-size: 0.82rem;">
+                                {{ ex.examined_at }}
+                            </td>
+                            <td style="padding: 0.85rem 1rem;">
+                                {% if ex.detected_disease %}
+                                <span style="font-weight: 700; color: var(--accent-cyan);">{{ ex.detected_disease }}</span>
+                                {% else %}
+                                <span style="color: var(--text-muted); font-style: italic;">No Scan Yet</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 0.85rem 1rem;">
+                                {% if ex.confidence_score is not none %}
+                                <span style="font-weight: 600;">{{ "%.1f"|format(ex.confidence_score * 100) }}%</span>
+                                {% else %}
+                                —
+                                {% endif %}
+                            </td>
+                            <td style="padding: 0.85rem 1rem;">
+                                <a href="/doctor/examination/{{ ex.examination_id }}" class="btn-primary-cyan" style="padding: 0.35rem 0.85rem; font-size: 0.8rem; border-radius: var(--radius-sm);">
+                                    Inspect Case &rarr;
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 3rem 1rem;">
+                <div class="feature-icon-wrapper" style="margin: 0 auto 1.5rem;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 14 14"></polyline>
+                    </svg>
+                </div>
+                <h4 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.35rem;">No Active Patient Cases Assigned</h4>
+                <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 480px; margin: 0 auto;">
+                    When hospital staff initiates a patient screening examination and assigns you as the review ophthalmologist, the case will appear here.
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+</body>
+</html>

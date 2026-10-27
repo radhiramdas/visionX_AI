@@ -1,126 +1,840 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VisionX AI - AI-Assisted Multi-Disease Retinal Screening</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <meta name="description" content="VisionX AI - AI-Based Multi-Disease Eye Screening Prototype analyzing retinal fundus images using deep learning (EfficientNet-B0) and Grad-CAM explainability.">
+    <title>VisionX AI – AI-Powered Multi-Disease Eye Screening</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
+
 <body>
-    <!-- Navigation Header -->
-    <header class="app-header">
-        <div class="header-container">
-            <a href="/" class="brand-link" id="brand-link">
+
+    <!-- =========================================================================
+         1. Clean Top Navigation Bar
+         ========================================================================= -->
+    <header class="app-navbar" id="app-navbar">
+        <div class="nav-container">
+            <!-- Brand Logo -->
+            <a href="/" class="brand-group" id="nav-brand">
                 <div class="brand-icon">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M2 12c1.73-4.39 6-7.5 10-7.5s8.27 3.11 10 7.5c-1.73 4.39-6 7.5-10 7.5S3.73 16.39 2 12z"></path>
                     </svg>
                 </div>
-                <span class="brand-title">VisionX AI</span>
-                <span class="brand-badge">EfficientNet-B0</span>
+                <div class="brand-title">
+                    VisionX <span class="brand-accent">AI</span>
+                </div>
             </a>
+
+            <!-- Navigation Links -->
+            <ul class="nav-links" id="nav-menu">
+                <li><a href="#home" class="nav-item active">Home</a></li>
+                <li><a href="#about" class="nav-item">About</a></li>
+                <li><a href="#features" class="nav-item">Features</a></li>
+                <li><a href="#diseases" class="nav-item">Eye Diseases</a></li>
+                <li><a href="#how-it-works" class="nav-item">How It Works</a></li>
+                <li><a href="#contact" class="nav-item">Contact</a></li>
+            </ul>
+
+            <!-- Right Actions (Theme Toggle, Login, Get Started) -->
+            <div class="nav-actions">
+                <!-- Theme Toggle Button -->
+                <button type="button" class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
+                    <svg id="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+
+                <!-- Login Button (Smooth scrolls to Auth Card) -->
+                <a href="#auth-card" class="btn-outline" id="nav-login-btn">
+                    Login
+                </a>
+
+                <!-- Get Started Button -->
+                <a href="#auth-card" class="btn-primary-cyan" id="nav-get-started-btn">
+                    Get Started
+                </a>
+
+                <!-- Mobile Hamburger Toggle -->
+                <button type="button" class="mobile-menu-btn" id="mobile-toggle" aria-label="Open navigation menu">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
         </div>
     </header>
 
-    <!-- Main Screening Content -->
-    <main class="main-content">
-        <!-- Hero Information -->
-        <section class="hero-section">
-            <span class="hero-subtitle">Deep Learning Ophthalmology Platform</span>
-            <h1 class="hero-title">AI-Assisted Multi-Disease Retinal Screening</h1>
-            <p class="hero-description">
-                Upload a color retinal fundus image for rapid, AI-driven screening across 7 ocular conditions with visual explainability powered by Grad-CAM.
-            </p>
-            
-            <!-- Supported Conditions Bar -->
-            <div class="conditions-bar">
-                <span class="condition-pill">Diabetic Retinopathy (DR)</span>
-                <span class="condition-pill">Glaucoma</span>
-                <span class="condition-pill">Cataract</span>
-                <span class="condition-pill">AMD</span>
-                <span class="condition-pill">Hypertensive Retinopathy</span>
-                <span class="condition-pill">Pathological Myopia</span>
-                <span class="condition-pill">Normal Fundus</span>
+    <main>
+        <!-- =========================================================================
+             2. Dark Hero Section with Retina Fundus Backdrop & Auth Card
+             ========================================================================= -->
+        <section class="hero-viewport" id="home">
+            <div class="hero-content-grid">
+                <!-- Left Presentation Column -->
+                <div class="hero-presentation">
+                    <div class="hero-badge-pill">
+                        <span class="pulse-dot"></span>
+                        Next-Gen Retinal AI Diagnostic Support
+                    </div>
+
+                    <div class="hero-branding-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </div>
+
+                    <h1 class="hero-main-title">
+                        VisionX <span class="gradient-text">Portal</span>
+                    </h1>
+
+                    <div class="hero-subtitle-tag">
+                        AI-Powered Multi-Disease Eye Screening
+                    </div>
+
+                    <p class="hero-description-text">
+                        Analyze retinal fundus images using artificial intelligence to identify potential signs of common eye diseases and support early ophthalmological screening with Grad-CAM visual heatmaps.
+                    </p>
+
+                    <div class="hero-action-buttons">
+                        <a href="#auth-card" class="btn-primary-cyan" style="padding: 0.8rem 1.8rem; font-size: 1rem;">
+                            Get Started
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </a>
+                        <a href="#features" class="btn-outline" style="padding: 0.8rem 1.6rem; font-size: 1rem; color: #ffffff; border-color: rgba(255,255,255,0.25);">
+                            Explore Features
+                        </a>
+                    </div>
+
+                    <div class="hero-stats-row">
+                        <div class="stat-item">
+                            <span class="stat-number">7</span>
+                            <span class="stat-label">Retinal Classes</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">EfficientNet</span>
+                            <span class="stat-label">B0 Architecture</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">Grad-CAM</span>
+                            <span class="stat-label">Explainable Heatmap</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Glassmorphism Authentication & Patient Intake Card (Matching Screenshot) -->
+                <div class="auth-glass-card" id="auth-card">
+                    <div class="auth-header">
+                        <h2 class="auth-title" id="auth-card-title">Sign In</h2>
+                        <p class="auth-subtitle" id="auth-card-subtitle">Select your portal access level</p>
+                    </div>
+
+                    <!-- Role Selector: Patient, Doctor, Admin (From Screenshot) -->
+                    <div class="role-selector-grid" id="role-selector">
+                        <button type="button" class="role-btn active" data-role="patient" id="role-patient-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <span>Patient</span>
+                        </button>
+                        <button type="button" class="role-btn" data-role="doctor" id="role-doctor-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"></path>
+                                <path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"></path>
+                                <circle cx="20" cy="10" r="2"></circle>
+                            </svg>
+                            <span>Doctor</span>
+                        </button>
+                        <button type="button" class="role-btn" data-role="admin" id="role-admin-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
+                            <span>Admin</span>
+                        </button>
+                    </div>
+
+                    <!-- Alert message banner -->
+                    <div id="auth-alert" class="alert-banner error" role="alert">
+                        <span id="auth-alert-message"></span>
+                    </div>
+
+                    <!-- Interactive Form: Connected to Existing Patient Database & Screening Pipeline -->
+                    <form id="auth-form" class="auth-form">
+                        <!-- Patient Intake / Login Fields -->
+                        <div class="form-group-dark">
+                            <label class="form-label-dark" for="input-email-name" id="label-email-name">
+                                Patient Full Name
+                            </label>
+                            <div class="input-wrapper-dark">
+                                <input type="text" id="input-email-name" name="patient_name" class="form-input-dark" placeholder="e.g. John Doe" required autocomplete="name">
+                            </div>
+                        </div>
+
+                        <!-- Age Field for Patient Registration -->
+                        <div class="form-group-dark patient-field" id="field-age-group">
+                            <label class="form-label-dark" for="input-age">Age (Years)</label>
+                            <div class="input-wrapper-dark">
+                                <input type="number" id="input-age" name="age" class="form-input-dark" placeholder="e.g. 45" min="1" max="120" required>
+                            </div>
+                        </div>
+
+                        <!-- City / Place Field for Patient Registration -->
+                        <div class="form-group-dark patient-field" id="field-place-group">
+                            <label class="form-label-dark" for="input-place">City / Place</label>
+                            <div class="input-wrapper-dark">
+                                <input type="text" id="input-place" name="place" class="form-input-dark" placeholder="e.g. New York or Mumbai" required>
+                            </div>
+                        </div>
+
+                        <!-- Password Field for Doctor / Admin Login mode -->
+                        <div class="form-group-dark auth-password-field" id="field-password-group" style="display: none;">
+                            <label class="form-label-dark" for="input-password">Password</label>
+                            <div class="input-wrapper-dark">
+                                <input type="password" id="input-password" name="password" class="form-input-dark" placeholder="Enter your password">
+                                <button type="button" class="input-action-btn" id="toggle-password-btn" aria-label="Toggle password visibility">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button (Matches the bright cyan button in screenshot) -->
+                        <button type="submit" id="auth-submit-btn" class="btn-auth-submit">
+                            <span id="btn-submit-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                                    <polyline points="10 17 15 12 10 7"></polyline>
+                                    <line x1="15" y1="12" x2="3" y2="12"></line>
+                                </svg>
+                            </span>
+                            <span id="btn-submit-text">Start Screening Session</span>
+                        </button>
+                    </form>
+
+                    <div class="auth-footer" id="auth-footer-text">
+                        Need help? <a href="#contact" id="auth-footer-link">Contact clinic support</a>
+                    </div>
+                </div>
             </div>
         </section>
 
-        <!-- Upload & Preview Card -->
-        <section class="glass-card upload-card" id="upload-form">
-            <!-- Error Banner -->
-            <div id="error-banner" class="error-banner" role="alert">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-                </svg>
-                <span id="error-message"></span>
-            </div>
-
-            <!-- Drag & Drop Upload Zone -->
-            <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload Retinal Fundus Image">
-                <input type="file" id="file-input" accept=".jpg,.jpeg,image/jpeg" style="display: none;">
-                
-                <div class="dropzone-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="17 8 12 3 7 8"></polyline>
-                        <line x1="12" y1="3" x2="12" y2="15"></line>
-                    </svg>
+        <!-- =========================================================================
+             3. About VisionX AI Section
+             ========================================================================= -->
+        <section class="content-section" id="about">
+            <div class="section-container">
+                <div class="section-header">
+                    <span class="section-tag">About The System</span>
+                    <h2 class="section-title">Intelligent Eye Screening with AI</h2>
+                    <p class="section-description">
+                        VisionX AI is an AI-assisted eye screening prototype that analyzes retinal fundus images to classify seven eye-related categories. It combines deep learning with visual explanations to help users understand model predictions.
+                    </p>
                 </div>
-                <h3 class="dropzone-title">Upload Retinal Fundus Image</h3>
-                <p class="dropzone-hint">Drag and drop a fundus photograph here, or click to browse</p>
-                <span class="browse-btn" id="browse-btn">Select JPEG File</span>
-            </div>
 
-            <!-- Selected File Preview Container -->
-            <div class="preview-container" id="preview-container">
-                <div class="preview-wrapper">
-                    <img id="preview-image" class="preview-image" src="" alt="Selected Retinal Fundus Preview">
+                <div class="about-grid">
+                    <div class="about-text-column">
+                        <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-primary);">
+                            Pioneering Retinal Disease Detection
+                        </h3>
+                        <p>
+                            Retinopathy and macular degeneration often develop asymptomatically in early stages. VisionX AI leverages fine-tuned convolutional neural network architectures to detect subtle pathological lesions, vascular changes, and optic disc anomalies in high-resolution fundus photography.
+                        </p>
+                        <div class="about-highlight-box">
+                            <p>
+                                <strong>Supported Screening Categories:</strong>
+                            </p>
+                            <div class="categories-pill-cloud">
+                                <span class="category-badge-chip"><span class="chip-dot"></span>AMD</span>
+                                <span class="category-badge-chip"><span class="chip-dot"></span>Cataract</span>
+                                <span class="category-badge-chip"><span class="chip-dot"></span>Diabetic Retinopathy (DR)</span>
+                                <span class="category-badge-chip"><span class="chip-dot"></span>Glaucoma</span>
+                                <span class="category-badge-chip"><span class="chip-dot"></span>Hypertensive Retinopathy</span>
+                                <span class="category-badge-chip"><span class="chip-dot"></span>Normal Fundus</span>
+                                <span class="category-badge-chip"><span class="chip-dot"></span>Pathological Myopia</span>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 1rem;">
+                            <strong>Medical Notice:</strong> VisionX AI is an academic clinical screening-support tool and does not replace a professional eye examination or ophthalmological diagnosis.
+                        </p>
+                    </div>
+
+                    <div class="about-visual-column">
+                        <div class="about-image-card">
+                            <img src="/static/images/fundus_hero.jpg" alt="Retinal Fundus Examination">
+                        </div>
+                        <div class="about-card-overlay-badge">
+                            <div class="badge-icon-box">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <div style="font-size: 1.1rem; font-weight: 800; color: var(--text-primary);">EfficientNet-B0</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Trained On Medical Retinal Datasets</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="preview-info">
-                    <span id="preview-filename"></span>
+            </div>
+        </section>
+
+        <!-- =========================================================================
+             4. Features Section
+             ========================================================================= -->
+        <section class="content-section" id="features" style="background-color: var(--bg-surface-subtle);">
+            <div class="section-container">
+                <div class="section-header">
+                    <span class="section-tag">Core Capabilities</span>
+                    <h2 class="section-title">Designed for Clinical Clarity & Precision</h2>
+                    <p class="section-description">
+                        Comprehensive feature suite engineered to streamline patient intake, automate image inference, and render explainable visual evidence.
+                    </p>
                 </div>
-                <button type="button" class="change-file-btn" id="change-file-btn">Choose a different image</button>
-            </div>
 
-            <!-- Action Area -->
-            <div class="action-area">
-                <button type="button" id="analyze-btn" class="btn-primary" disabled>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                    Analyze Fundus Image
-                </button>
-            </div>
+                <div class="features-grid">
+                    <!-- Feature 1 -->
+                    <div class="feature-card">
+                        <div class="feature-icon-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                            </svg>
+                        </div>
+                        <h3 class="feature-title">Multi-Disease Classification</h3>
+                        <p class="feature-description">
+                            Classifies fundus photographs across 7 distinct categories including AMD, Glaucoma, Cataract, DR, and Hypertensive Retinopathy.
+                        </p>
+                    </div>
 
-            <!-- Loading State Overlay -->
-            <div id="loading-overlay" class="loading-overlay">
-                <div class="spinner"></div>
-                <div class="loading-text">Analyzing Retinal Fundus Image...</div>
-                <div class="loading-subtext">Executing EfficientNet-B0 inference & computing Grad-CAM activation heatmap</div>
-            </div>
+                    <!-- Feature 2 -->
+                    <div class="feature-card">
+                        <div class="feature-icon-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 14 14"></polyline>
+                            </svg>
+                        </div>
+                        <h3 class="feature-title">AI Confidence Score</h3>
+                        <p class="feature-description">
+                            Transparent probability quantification showing the model's prediction confidence score for every evaluated scan.
+                        </p>
+                    </div>
 
-            <!-- Medical Disclaimer -->
-            <div class="disclaimer-box">
-                <div class="disclaimer-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
-                    </svg>
+                    <!-- Feature 3 -->
+                    <div class="feature-card">
+                        <div class="feature-icon-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                <line x1="11" y1="8" x2="11" y2="14"></line>
+                                <line x1="8" y1="11" x2="14" y2="11"></line>
+                            </svg>
+                        </div>
+                        <h3 class="feature-title">Grad-CAM Visualization</h3>
+                        <p class="feature-description">
+                            Generates gradient-weighted class activation mapping heatmaps to visually reveal anatomical regions driving the classification.
+                        </p>
+                    </div>
+
+                    <!-- Feature 4 -->
+                    <div class="feature-card">
+                        <div class="feature-icon-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                        </div>
+                        <h3 class="feature-title">Retinal Image Upload</h3>
+                        <p class="feature-description">
+                            Drag-and-drop support for high-resolution retinal fundus formats (JPG, PNG, WebP) with client and server validation.
+                        </p>
+                    </div>
+
+                    <!-- Feature 5 -->
+                    <div class="feature-card">
+                        <div class="feature-icon-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                            </svg>
+                        </div>
+                        <h3 class="feature-title">PDF Clinical Report</h3>
+                        <p class="feature-description">
+                            One-click generation and download of complete diagnostic PDF reports containing patient details, scan images, and results.
+                        </p>
+                    </div>
+
+                    <!-- Feature 6 -->
+                    <div class="feature-card">
+                        <div class="feature-icon-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                            </svg>
+                        </div>
+                        <h3 class="feature-title">Patient Record Management</h3>
+                        <p class="feature-description">
+                            Robust relational storage in MySQL linking patient intake demographics, image hashes, timestamps, and model predictions.
+                        </p>
+                    </div>
                 </div>
-                <div class="disclaimer-text">
-                    <strong>Medical Disclaimer:</strong> VisionX AI provides AI-assisted screening support and does not replace professional clinical judgment or ophthalmological examination.
+            </div>
+        </section>
+
+        <!-- =========================================================================
+             5. Supported Eye Diseases Section (7 Categories)
+             ========================================================================= -->
+        <section class="content-section" id="diseases">
+            <div class="section-container">
+                <div class="section-header">
+                    <span class="section-tag">Ophthalmology Conditions</span>
+                    <h2 class="section-title">Seven Supported Retinal Categories</h2>
+                    <p class="section-description">
+                        Educational overview of the pathological conditions recognized by the VisionX AI deep learning classification pipeline.
+                    </p>
+                </div>
+
+                <div class="diseases-grid">
+                    <!-- 1. AMD -->
+                    <div class="disease-card">
+                        <div class="disease-image-wrap">
+                            <img src="/static/images/diseases/amd.jpg" alt="Age-Related Macular Degeneration" onerror="this.src='/static/images/fundus_hero.jpg'">
+                            <span class="disease-tag-badge">Macula</span>
+                        </div>
+                        <div class="disease-content">
+                            <h3 class="disease-name">Age-Related Macular Degeneration (AMD)</h3>
+                            <p class="disease-summary">
+                                Degeneration of the central retina (macula) causing blurred or diminished central vision, characterized by drusen deposits and retinal pigmentary changes.
+                            </p>
+                            <div class="disease-footer">
+                                <span>Condition 01</span>
+                                <span>Class: AMD</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Cataract -->
+                    <div class="disease-card">
+                        <div class="disease-image-wrap">
+                            <img src="/static/images/diseases/cataract.jpg" alt="Cataract Fundus Manifestation" onerror="this.src='/static/images/fundus_hero.jpg'">
+                            <span class="disease-tag-badge">Lens Opacity</span>
+                        </div>
+                        <div class="disease-content">
+                            <h3 class="disease-name">Cataract</h3>
+                            <p class="disease-summary">
+                                Clouding of the internal crystalline lens resulting in obscured fundus illumination, diffuse blur, and impaired retinal visibility during screening.
+                            </p>
+                            <div class="disease-footer">
+                                <span>Condition 02</span>
+                                <span>Class: Cataract</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Diabetic Retinopathy -->
+                    <div class="disease-card">
+                        <div class="disease-image-wrap">
+                            <img src="/static/images/diseases/dr.jpg" alt="Diabetic Retinopathy" onerror="this.src='/static/images/fundus_hero.jpg'">
+                            <span class="disease-tag-badge">Vascular</span>
+                        </div>
+                        <div class="disease-content">
+                            <h3 class="disease-name">Diabetic Retinopathy (DR)</h3>
+                            <p class="disease-summary">
+                                Microvascular complication of diabetes manifesting through microaneurysms, hemorrhages, hard exudates, and abnormal neovascular proliferation.
+                            </p>
+                            <div class="disease-footer">
+                                <span>Condition 03</span>
+                                <span>Class: DR</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. Glaucoma -->
+                    <div class="disease-card">
+                        <div class="disease-image-wrap">
+                            <img src="/static/images/diseases/glaucoma.jpg" alt="Glaucoma Optic Nerve" onerror="this.src='/static/images/fundus_hero.jpg'">
+                            <span class="disease-tag-badge">Optic Nerve</span>
+                        </div>
+                        <div class="disease-content">
+                            <h3 class="disease-name">Glaucoma</h3>
+                            <p class="disease-summary">
+                                Progressive optic neuropathy characterized by enlarged optic cup-to-disc ratio (CDR), neuroretinal rim thinning, and gradual peripheral field loss.
+                            </p>
+                            <div class="disease-footer">
+                                <span>Condition 04</span>
+                                <span>Class: Glaucoma</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. Hypertensive Retinopathy -->
+                    <div class="disease-card">
+                        <div class="disease-image-wrap">
+                            <img src="/static/images/diseases/hypertensive_retinopathy.jpg" alt="Hypertensive Retinopathy" onerror="this.src='/static/images/fundus_hero.jpg'">
+                            <span class="disease-tag-badge">Systemic / Vessels</span>
+                        </div>
+                        <div class="disease-content">
+                            <h3 class="disease-name">Hypertensive Retinopathy</h3>
+                            <p class="disease-summary">
+                                Retinal vascular damage induced by sustained high systemic blood pressure, featuring arteriolar narrowing, copper/silver wiring, and AV nicking.
+                            </p>
+                            <div class="disease-footer">
+                                <span>Condition 05</span>
+                                <span>Class: Hypertensive_Retinopathy</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 6. Normal Fundus -->
+                    <div class="disease-card">
+                        <div class="disease-image-wrap">
+                            <img src="/static/images/diseases/normal_fundus.jpg" alt="Normal Healthy Retina" onerror="this.src='/static/images/fundus_hero.jpg'">
+                            <span class="disease-tag-badge" style="color: var(--color-success); border-color: rgba(16, 185, 129, 0.4);">Healthy Baseline</span>
+                        </div>
+                        <div class="disease-content">
+                            <h3 class="disease-name">Normal Fundus</h3>
+                            <p class="disease-summary">
+                                Healthy baseline retina demonstrating sharp optic disc margins, distinct physiological cup, intact foveal reflex, and clear vascular architecture.
+                            </p>
+                            <div class="disease-footer">
+                                <span>Condition 06</span>
+                                <span>Class: Normal_Fundus</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 7. Pathological Myopia -->
+                    <div class="disease-card">
+                        <div class="disease-image-wrap">
+                            <img src="/static/images/diseases/pathological_myopia.jpg" alt="Pathological Myopia" onerror="this.src='/static/images/fundus_hero.jpg'">
+                            <span class="disease-tag-badge">Chorioretinal</span>
+                        </div>
+                        <div class="disease-content">
+                            <h3 class="disease-name">Pathological Myopia</h3>
+                            <p class="disease-summary">
+                                High myopic refractive error with excessive globe elongation leading to posterior staphyloma, peripapillary atrophy, and chorioretinal thinning.
+                            </p>
+                            <div class="disease-footer">
+                                <span>Condition 07</span>
+                                <span>Class: Pathological_Myopia</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =========================================================================
+             6. How It Works Section (4 Steps)
+             ========================================================================= -->
+        <section class="content-section" id="how-it-works" style="background-color: var(--bg-surface-subtle);">
+            <div class="section-container">
+                <div class="section-header">
+                    <span class="section-tag">Clinical Workflow</span>
+                    <h2 class="section-title">Four Simple Steps to Screening</h2>
+                    <p class="section-description">
+                        Streamlined protocol designed for clinics and research screening environments.
+                    </p>
+                </div>
+
+                <div class="steps-container">
+                    <!-- Step 1 -->
+                    <div class="step-card">
+                        <div class="step-badge-number">1</div>
+                        <h3 class="step-title">Register Patient</h3>
+                        <p class="step-description">
+                            Enter patient demographics (Full Name, Age, Place) into the intake form to instantiate a secure screening record.
+                        </p>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="step-card">
+                        <div class="step-badge-number">2</div>
+                        <h3 class="step-title">Upload Fundus Image</h3>
+                        <p class="step-description">
+                            Select a high-resolution fundus photograph (JPG, PNG, WebP) captured from a standard retinal camera.
+                        </p>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="step-card">
+                        <div class="step-badge-number">3</div>
+                        <h3 class="step-title">AI Model Inference</h3>
+                        <p class="step-description">
+                            The EfficientNet-B0 network analyzes structural patterns and calculates prediction probabilities in seconds.
+                        </p>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="step-card">
+                        <div class="step-badge-number">4</div>
+                        <h3 class="step-title">Grad-CAM & PDF Report</h3>
+                        <p class="step-description">
+                            Review visual attention heatmaps, confirm confidence metrics, and download the standardized PDF clinical report.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =========================================================================
+             7. Contact & Consultation Section
+             ========================================================================= -->
+        <section class="content-section" id="contact">
+            <div class="section-container">
+                <div class="contact-box">
+                    <div>
+                        <span class="section-tag">Get In Touch</span>
+                        <h2 class="section-title" style="text-align: left; margin-bottom: 1rem;">
+                            VisionX AI Research & Support
+                        </h2>
+                        <p style="color: var(--text-secondary); line-height: 1.65;">
+                            VisionX AI is developed as an advanced MCA major project demonstration on artificial intelligence in ophthalmological diagnostic workflows. Reach out for technical inquiries or demo walkthroughs.
+                        </p>
+
+                        <ul class="contact-info-list">
+                            <li class="contact-info-item">
+                                <div class="contact-icon-box">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                        <polyline points="22,6 12,13 2,6"></polyline>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <strong style="color: var(--text-primary); display: block;">Email Inquiries</strong>
+                                    <span>research@visionx-ai.local</span>
+                                </div>
+                            </li>
+                            <li class="contact-info-item">
+                                <div class="contact-icon-box">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                        <circle cx="12" cy="10" r="3"></circle>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <strong style="color: var(--text-primary); display: block;">Institution</strong>
+                                    <span>Department of Computer Applications (MCA)</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Contact Form -->
+                    <form class="contact-form" id="contact-form" onsubmit="event.preventDefault(); alert('Thank you for contacting VisionX AI. Your query has been received.'); this.reset();">
+                        <input type="text" class="contact-input" placeholder="Your Name" required>
+                        <input type="email" class="contact-input" placeholder="Your Email" required>
+                        <input type="text" class="contact-input" placeholder="Subject">
+                        <textarea class="contact-input" placeholder="Your message or inquiry..."></textarea>
+                        <button type="submit" class="btn-primary-cyan" style="width: 100%; border-radius: var(--radius-md);">
+                            Send Message
+                        </button>
+                    </form>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- Footer -->
+    <!-- =========================================================================
+         8. Footer
+         ========================================================================= -->
     <footer class="app-footer">
-        <p>VisionX AI &copy; 2026 &bull; AI-Assisted Retinal Disease Screening System &bull; MCA Academic Project</p>
+        <div class="footer-container">
+            <div class="footer-top-grid">
+                <div class="footer-brand">
+                    <div class="brand-group">
+                        <div class="brand-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M2 12c1.73-4.39 6-7.5 10-7.5s8.27 3.11 10 7.5c-1.73 4.39-6 7.5-10 7.5S3.73 16.39 2 12z"></path>
+                            </svg>
+                        </div>
+                        <div class="brand-title" style="color: #ffffff;">
+                            VisionX <span class="brand-accent">AI</span>
+                        </div>
+                    </div>
+                    <p>
+                        AI-assisted ophthalmology prototype for multi-disease retinal screening, utilizing EfficientNet-B0 and Grad-CAM explainability.
+                    </p>
+                </div>
+
+                <div>
+                    <h4 class="footer-col-title">Navigation</h4>
+                    <ul class="footer-links">
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#about">About System</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#diseases">Eye Diseases</a></li>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="footer-col-title">Diseases</h4>
+                    <ul class="footer-links">
+                        <li><a href="#diseases">AMD</a></li>
+                        <li><a href="#diseases">Diabetic Retinopathy</a></li>
+                        <li><a href="#diseases">Glaucoma</a></li>
+                        <li><a href="#diseases">Cataract</a></li>
+                        <li><a href="#diseases">Normal Fundus</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="footer-col-title">Compliance</h4>
+                    <ul class="footer-links">
+                        <li><a href="#about">Academic Project</a></li>
+                        <li><a href="#about">Screening Notice</a></li>
+                        <li><a href="#contact">Contact Support</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom-bar">
+                <span>&copy; 2026 VisionX AI &bull; MCA Major Project &bull; Retinal Eye Disease Detection</span>
+                <span>Screening Support Prototype &bull; Not Clinical Advice</span>
+            </div>
+        </div>
     </footer>
 
-    <script src="/static/js/script.js"></script>
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/patient.js') }}"></script>
+    <script>
+        // Smooth theme toggle
+        const themeBtn = document.getElementById('theme-toggle-btn');
+        const iconMoon = document.getElementById('theme-icon-moon');
+        const iconSun = document.getElementById('theme-icon-sun');
+
+        // Check stored theme
+        const currentTheme = localStorage.getItem('visionx_theme') || 'light';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        updateThemeIcons(currentTheme);
+
+        themeBtn.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('visionx_theme', next);
+            updateThemeIcons(next);
+        });
+
+        function updateThemeIcons(theme) {
+            if (theme === 'dark') {
+                iconMoon.style.display = 'none';
+                iconSun.style.display = 'block';
+            } else {
+                iconMoon.style.display = 'block';
+                iconSun.style.display = 'none';
+            }
+        }
+
+        // Role Selector switching logic (Patient / Doctor / Admin)
+        const roleButtons = document.querySelectorAll('.role-btn');
+        const cardTitle = document.getElementById('auth-card-title');
+        const cardSubtitle = document.getElementById('auth-card-subtitle');
+        const labelEmailName = document.getElementById('label-email-name');
+        const inputEmailName = document.getElementById('input-email-name');
+        const fieldAge = document.getElementById('field-age-group');
+        const fieldPlace = document.getElementById('field-place-group');
+        const fieldPassword = document.getElementById('field-password-group');
+        const inputAge = document.getElementById('input-age');
+        const inputPlace = document.getElementById('input-place');
+        const inputPassword = document.getElementById('input-password');
+        const submitBtnText = document.getElementById('btn-submit-text');
+
+        let currentRole = 'patient';
+
+        roleButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                roleButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentRole = btn.getAttribute('data-role');
+
+                if (currentRole === 'patient') {
+                    cardTitle.textContent = "Sign In";
+                    cardSubtitle.textContent = "Select your portal access level";
+                    labelEmailName.textContent = "Patient Full Name";
+                    inputEmailName.placeholder = "e.g. John Doe";
+                    inputEmailName.name = "patient_name";
+                    fieldAge.style.display = 'flex';
+                    fieldPlace.style.display = 'flex';
+                    fieldPassword.style.display = 'none';
+                    inputAge.required = true;
+                    inputPlace.required = true;
+                    inputPassword.required = false;
+                    submitBtnText.textContent = "Start Screening Session";
+                } else if (currentRole === 'doctor') {
+                    cardTitle.textContent = "Doctor Sign In";
+                    cardSubtitle.textContent = "Access verified clinical review workstation";
+                    labelEmailName.textContent = "Doctor Email Address";
+                    inputEmailName.placeholder = "dr.smith@visionx.clinic";
+                    inputEmailName.name = "email";
+                    fieldAge.style.display = 'none';
+                    fieldPlace.style.display = 'none';
+                    fieldPassword.style.display = 'flex';
+                    inputAge.required = false;
+                    inputPlace.required = false;
+                    inputPassword.required = true;
+                    submitBtnText.textContent = "Secure Doctor Sign In";
+                } else if (currentRole === 'admin') {
+                    cardTitle.textContent = "Admin Portal";
+                    cardSubtitle.textContent = "System management & model audit dashboard";
+                    labelEmailName.textContent = "Admin Username / Email";
+                    inputEmailName.placeholder = "admin@visionx.clinic";
+                    inputEmailName.name = "email";
+                    fieldAge.style.display = 'none';
+                    fieldPlace.style.display = 'none';
+                    fieldPassword.style.display = 'flex';
+                    inputAge.required = false;
+                    inputPlace.required = false;
+                    inputPassword.required = true;
+                    submitBtnText.textContent = "Sign In as Admin";
+                }
+            });
+        });
+
+        // Toggle password show/hide
+        const togglePasswordBtn = document.getElementById('toggle-password-btn');
+        if (togglePasswordBtn) {
+            togglePasswordBtn.addEventListener('click', () => {
+                const type = inputPassword.getAttribute('type') === 'password' ? 'text' : 'password';
+                inputPassword.setAttribute('type', type);
+            });
+        }
+    </script>
 </body>
+
 </html>

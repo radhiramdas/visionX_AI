@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard — VisionX AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Top Navigation Bar for Admin -->
+    <header class="app-navbar">
+        <div class="nav-container">
+            <a href="/admin/dashboard" class="brand-group">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M2 12c1.73-4.39 6-7.5 10-7.5s8.27 3.11 10 7.5c-1.73 4.39-6 7.5-10 7.5S3.73 16.39 2 12z"></path>
+                    </svg>
+                </div>
+                <div class="brand-title">
+                    VisionX <span class="brand-accent">Admin</span>
+                </div>
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="/admin/dashboard" class="nav-item active">Dashboard</a></li>
+                <li><a href="/admin/users" class="nav-item">User Management</a></li>
+                <li><a href="/admin/examinations" class="nav-item">Examinations</a></li>
+                <li><a href="/admin/patients" class="nav-item">Patients</a></li>
+            </ul>
+
+            <div class="nav-actions">
+                <span style="font-size: 0.88rem; color: var(--text-muted); font-weight: 500;">
+                    Admin: <strong style="color: var(--text-primary);">{{ session.username }}</strong>
+                </span>
+                <a href="/logout" class="btn-outline" style="padding: 0.45rem 1.1rem;">
+                    Sign Out
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-container" style="max-width: 1280px;">
+        <div class="page-header-box" style="text-align: left; margin-bottom: 2rem;">
+            <span class="section-tag">System Administration</span>
+            <h1 class="section-title" style="font-size: 2rem; margin-bottom: 0.25rem;">VisionX Control Center</h1>
+            <p class="section-description" style="margin: 0;">
+                Monitor platform metrics, manage clinical accounts, and oversee patient diagnostic pipelines.
+            </p>
+        </div>
+
+        <!-- 5 Key Stat Cards -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1.25rem; margin-bottom: 2.5rem;">
+            <div class="clinical-card" style="padding: 1.5rem;">
+                <span class="field-label">Total Patients</span>
+                <div style="font-size: 2.2rem; font-weight: 800; color: var(--accent-cyan); margin-top: 0.35rem;">
+                    {{ stats.total_patients }}
+                </div>
+            </div>
+            <div class="clinical-card" style="padding: 1.5rem;">
+                <span class="field-label">Registered Doctors</span>
+                <div style="font-size: 2.2rem; font-weight: 800; color: var(--accent-blue); margin-top: 0.35rem;">
+                    {{ stats.total_doctors }}
+                </div>
+            </div>
+            <div class="clinical-card" style="padding: 1.5rem;">
+                <span class="field-label">Hospital Staff</span>
+                <div style="font-size: 2.2rem; font-weight: 800; color: var(--color-success); margin-top: 0.35rem;">
+                    {{ stats.total_staff }}
+                </div>
+            </div>
+            <div class="clinical-card" style="padding: 1.5rem;">
+                <span class="field-label">Examinations</span>
+                <div style="font-size: 2.2rem; font-weight: 800; color: var(--accent-navy); margin-top: 0.35rem;">
+                    {{ stats.total_examinations }}
+                </div>
+            </div>
+            <div class="clinical-card" style="padding: 1.5rem;">
+                <span class="field-label">AI Predictions</span>
+                <div style="font-size: 2.2rem; font-weight: 800; color: #8b5cf6; margin-top: 0.35rem;">
+                    {{ stats.total_predictions }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Provisioning Forms -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 2rem; margin-bottom: 3rem;">
+            <!-- Create Doctor Card -->
+            <div class="clinical-card">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;">
+                    <div class="feature-icon-wrapper" style="margin-bottom: 0; width: 42px; height: 42px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"></path>
+                            <circle cx="20" cy="10" r="2"></circle>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">Create Doctor Profile</h3>
+                        <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0;">Creates user and links doctors table</p>
+                    </div>
+                </div>
+
+                <form id="create-doctor-form" style="display: flex; flex-direction: column; gap: 0.85rem;">
+                    <input type="text" name="full_name" class="contact-input" placeholder="Doctor Full Name (e.g. Sarah Jenkins)" required>
+                    <input type="text" name="specialization" class="contact-input" placeholder="Specialization (e.g. Retinal Specialist)" value="Ophthalmologist">
+                    <input type="text" name="phone" class="contact-input" placeholder="Phone Number">
+                    <input type="text" name="username" class="contact-input" placeholder="Login Username" required>
+                    <input type="email" name="email" class="contact-input" placeholder="Doctor Email" required>
+                    <input type="password" name="password" class="contact-input" placeholder="Temporary Password" required minlength="6">
+                    <button type="submit" class="btn-primary-cyan" style="border-radius: var(--radius-md); padding: 0.75rem;">
+                        Provision Doctor Account
+                    </button>
+                </form>
+            </div>
+
+            <!-- Create Staff Card -->
+            <div class="clinical-card">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;">
+                    <div class="feature-icon-wrapper" style="margin-bottom: 0; width: 42px; height: 42px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">Create Hospital Staff</h3>
+                        <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0;">Authorizes patient intake & image processing</p>
+                    </div>
+                </div>
+
+                <form id="create-staff-form" style="display: flex; flex-direction: column; gap: 0.85rem;">
+                    <input type="text" name="username" class="contact-input" placeholder="Staff Username (e.g. intake_staff_01)" required>
+                    <input type="email" name="email" class="contact-input" placeholder="Staff Official Email" required>
+                    <input type="password" name="password" class="contact-input" placeholder="Initial Password" required minlength="6">
+                    <button type="submit" class="btn-primary-cyan" style="border-radius: var(--radius-md); padding: 0.75rem;">
+                        Provision Staff Account
+                    </button>
+                </form>
+            </div>
+
+            <!-- Create Admin Card -->
+            <div class="clinical-card">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;">
+                    <div class="feature-icon-wrapper" style="margin-bottom: 0; width: 42px; height: 42px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">Create System Admin</h3>
+                        <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0;">Authorizes full platform management</p>
+                    </div>
+                </div>
+
+                <form id="create-admin-form" style="display: flex; flex-direction: column; gap: 0.85rem;">
+                    <input type="text" name="username" class="contact-input" placeholder="Admin Username" required>
+                    <input type="email" name="email" class="contact-input" placeholder="Admin Email" required>
+                    <input type="password" name="password" class="contact-input" placeholder="Admin Password" required minlength="8">
+                    <button type="submit" class="btn-primary-cyan" style="border-radius: var(--radius-md); padding: 0.75rem; background: linear-gradient(135deg, #0f172a, #1e293b);">
+                        Provision New Admin
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="clinical-card" style="margin-bottom: 3rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">Registered System Accounts</h3>
+                <span style="font-size: 0.85rem; color: var(--text-muted);">Total: {{ users|length }} users</span>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border-subtle); color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px;">
+                            <th style="padding: 0.75rem 1rem;">ID</th>
+                            <th style="padding: 0.75rem 1rem;">Username</th>
+                            <th style="padding: 0.75rem 1rem;">Email</th>
+                            <th style="padding: 0.75rem 1rem;">Role</th>
+                            <th style="padding: 0.75rem 1rem;">Linked Profile</th>
+                            <th style="padding: 0.75rem 1rem;">Status</th>
+                            <th style="padding: 0.75rem 1rem;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr style="border-bottom: 1px solid var(--border-subtle);">
+                            <td style="padding: 0.85rem 1rem; font-weight: 600;">#{{ u.user_id }}</td>
+                            <td style="padding: 0.85rem 1rem; font-weight: 600; color: var(--text-primary);">{{ u.username }}</td>
+                            <td style="padding: 0.85rem 1rem; color: var(--text-secondary);">{{ u.email }}</td>
+                            <td style="padding: 0.85rem 1rem;">
+                                <span style="padding: 0.2rem 0.6rem; border-radius: var(--radius-full); font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+                                    {% if u.role == 'admin' %}background: rgba(15, 23, 42, 0.1); color: var(--accent-navy);
+                                    {% elif u.role == 'doctor' %}background: rgba(14, 165, 233, 0.12); color: var(--accent-blue);
+                                    {% else %}background: rgba(16, 185, 129, 0.12); color: var(--color-success);{% endif %}">
+                                    {{ u.role }}
+                                </span>
+                            </td>
+                            <td style="padding: 0.85rem 1rem; color: var(--text-secondary);">
+                                {% if u.doctor_name %}Dr. {{ u.doctor_name }} ({{ u.specialization }}){% else %}—{% endif %}
+                            </td>
+                            <td style="padding: 0.85rem 1rem;">
+                                {% if u.is_active %}
+                                <span style="color: var(--color-success); font-weight: 600;">&bull; Active</span>
+                                {% else %}
+                                <span style="color: var(--color-danger); font-weight: 600;">&bull; Deactivated</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 0.85rem 1rem;">
+                                {% if u.user_id != session.user_id %}
+                                <button type="button" class="btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.78rem;"
+                                    onclick="toggleUserStatus({{ u.user_id }}, {{ 0 if u.is_active else 1 }})">
+                                    {{ "Deactivate" if u.is_active else "Activate" }}
+                                </button>
+                                {% else %}
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">(You)</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        async function handleFormSubmit(formId, endpoint) {
+            const form = document.getElementById(formId);
+            if (!form) return;
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const json = Object.fromEntries(formData.entries());
+
+                try {
+                    const res = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(json)
+                    });
+                    const data = await res.json();
+                    if (!res.ok || !data.success) {
+                        alert(data.error || "Action failed.");
+                    } else {
+                        alert(data.message);
+                        window.location.reload();
+                    }
+                } catch (err) {
+                    alert("Network error.");
+                }
+            });
+        }
+
+        handleFormSubmit('create-doctor-form', '/admin/create-doctor');
+        handleFormSubmit('create-staff-form', '/admin/create-staff');
+        handleFormSubmit('create-admin-form', '/admin/create-admin');
+
+        async function toggleUserStatus(userId, newStatus) {
+            if (!confirm(`Are you sure you want to ${newStatus === 1 ? 'activate' : 'deactivate'} this user account?`)) return;
+            try {
+                const res = await fetch('/admin/toggle-user-status', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({user_id: userId, is_active: newStatus})
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    alert(data.error || "Status update failed.");
+                } else {
+                    window.location.reload();
+                }
+            } catch (err) {
+                alert("Network error.");
+            }
+        }
+    </script>
+</body>
+</html>
