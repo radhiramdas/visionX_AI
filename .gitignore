@@ -29,3 +29,11 @@ tuning_results/
 # Other models not selected for deployment
 best_model.pth
 best_model_efficientnet_b0_baseline.pth
+# Generated Grad-CAM images
+backend/generated/
+
+# Uploaded patient images
+backend/uploads/
+
+# Generated PDF reports
+backend/reports/
