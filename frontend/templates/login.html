@@ -37,8 +37,8 @@
     <main style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 3rem 1.5rem; background-image: radial-gradient(at 50% 50%, rgba(6, 182, 212, 0.08) 0px, transparent 60%);">
         <div class="auth-glass-card" style="margin: 0 auto; max-width: 480px; width: 100%;">
             <div class="auth-header">
-                <h2 class="auth-title" id="login-title">Portal Sign In</h2>
-                <p class="auth-subtitle" id="login-subtitle">Select your authorization level</p>
+                <h2 class="auth-title" id="login-title">Staff Sign In</h2>
+                <p class="auth-subtitle" id="login-subtitle">Hospital staff & patient screening intake</p>
             </div>
 
             <!-- Role Selector: Staff, Doctor, Admin -->
@@ -50,7 +50,7 @@
                         <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                         <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                     </svg>
-                    <span>Hospital Staff</span>
+                    <span>Staff</span>
                 </button>
                 <button type="button" class="role-btn" data-role="doctor" id="role-doctor-btn">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -125,14 +125,14 @@
                 roleInput.value = role;
 
                 if (role === 'staff') {
-                    loginTitle.textContent = "Hospital Staff Sign In";
-                    submitText.textContent = "Sign In to Staff Portal";
+                    loginTitle.textContent = "Staff Sign In";
+                    submitText.textContent = "Sign In as Staff";
                 } else if (role === 'doctor') {
-                    loginTitle.textContent = "Doctor Clinical Sign In";
-                    submitText.textContent = "Sign In to Doctor Portal";
+                    loginTitle.textContent = "Doctor Sign In";
+                    submitText.textContent = "Sign In as Doctor";
                 } else if (role === 'admin') {
-                    loginTitle.textContent = "Administrator Portal";
-                    submitText.textContent = "Sign In to Admin Portal";
+                    loginTitle.textContent = "Admin Sign In";
+                    submitText.textContent = "Sign In as Admin";
                 }
             });
         });

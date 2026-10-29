@@ -110,6 +110,14 @@
                         <span class="field-label">Location</span>
                         <span class="field-value" id="result-patient-place">--</span>
                     </div>
+                    <div class="patient-data-field">
+                        <span class="field-label">Examination ID</span>
+                        <span class="field-value" id="result-exam-id" style="color: var(--accent-cyan); font-weight: 700;">--</span>
+                    </div>
+                    <div class="patient-data-field">
+                        <span class="field-label">Examination Date</span>
+                        <span class="field-value" id="result-exam-date" style="font-size: 0.88rem;">--</span>
+                    </div>
                 </div>
             </div>
 
@@ -210,10 +218,31 @@
                 <p id="report-message" style="display: none; margin-top: 1rem; font-size: 0.88rem; color: var(--text-muted);" role="status"></p>
             </div>
 
-            <!-- Actions Row -->
-            <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
-                <button type="button" id="analyze-another-btn" class="btn-outline">
-                    Perform Another Screening
+            <!-- Clinical Safety Notice (Requirement 8) -->
+            <div class="clinical-callout" style="border-left: 4px solid var(--accent-cyan); background: rgba(6, 182, 212, 0.05); margin-top: 2rem;">
+                <div class="clinical-callout-icon" style="color: var(--accent-cyan);">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                </div>
+                <div class="clinical-callout-text">
+                    <h4 style="color: var(--accent-cyan); margin-bottom: 0.25rem;">Clinical Safety Notice</h4>
+                    <p style="margin: 0; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5;">
+                        AI results are intended to support screening and clinical review. Changes in predictions or confidence scores do not independently establish clinical improvement or deterioration. A qualified eye specialist should interpret the findings and determine appropriate next steps.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Actions Row (Requirement 3) -->
+            <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 1rem; margin-top: 2rem;">
+                <a id="btn-patient-history" class="btn-primary-cyan" href="#" style="padding: 0.65rem 1.4rem;">
+                    View Patient History
+                </a>
+                <a id="btn-return-staff" class="btn-outline" href="/staff/dashboard" style="padding: 0.65rem 1.4rem;">
+                    &larr; Return to Staff Dashboard
+                </a>
+                <button type="button" id="analyze-another-btn" class="btn-outline" style="padding: 0.65rem 1.4rem;">
+                    + New Patient Intake
                 </button>
             </div>
         </div>

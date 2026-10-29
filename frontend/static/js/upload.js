@@ -42,6 +42,13 @@ document.addEventListener("DOMContentLoaded", () => {
         if (placeElem) placeElem.textContent = patient.place;
     }
 
+    if (examinationId) {
+        const examField = document.getElementById("exam-id-field");
+        const examElem = document.getElementById("patient-exam-id");
+        if (examField) examField.style.display = "block";
+        if (examElem) examElem.textContent = `#${examinationId}`;
+    }
+
     function showError(message) {
         if (errorBanner) errorBanner.style.display = "block";
         if (errorMessage) errorMessage.textContent = message;

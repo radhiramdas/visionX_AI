@@ -191,13 +191,15 @@ def generate_pdf_report(
     )
 
     story.append(Spacer(1, 10))
-    story.append(Paragraph("Medical & Screening Disclaimer", heading_style))
+    story.append(Paragraph("Clinical Safety Notice", heading_style))
     story.append(
         Paragraph(
-            "VisionX AI is an educational and research-driven retinal screening prototype. "
-            "Its output is not a confirmed medical diagnosis. The model confidence reflects class-activation "
-            "probability, not clinical certainty. Poor optical illumination or uncalibrated photographic artifacts "
-            "may distort inference. Do not rely on this document for emergency or unverified treatment.",
+            "AI results are intended to support screening and clinical review. "
+            "Changes in predictions or confidence scores do not independently establish "
+            "clinical improvement or deterioration. A qualified eye specialist should "
+            "interpret the findings and determine appropriate next steps. "
+            "VisionX AI is an educational and research-driven retinal screening prototype; "
+            "its output does not constitute a confirmed medical diagnosis.",
             body_style,
         )
     )

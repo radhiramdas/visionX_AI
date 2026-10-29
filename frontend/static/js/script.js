@@ -345,8 +345,15 @@ function initResultPage() {
         'result-patient-id': resultPatient.patient_id,
         'result-patient-name': resultPatient.patient_name,
         'result-patient-age': resultPatient.age,
-        'result-patient-place': resultPatient.place
+        'result-patient-place': resultPatient.place,
+        'result-exam-id': result.examination_id ? `#${result.examination_id}` : '--',
+        'result-exam-date': result.examined_at || new Date().toLocaleString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
     };
+
+    const historyBtn = document.getElementById('btn-patient-history');
+    if (historyBtn && resultPatient.patient_id) {
+        historyBtn.href = `/staff/dashboard?patient_id=${resultPatient.patient_id}`;
+    }
 
     Object.entries(patientFields).forEach(([elementId, value]) => {
         const element = document.getElementById(elementId);

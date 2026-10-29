@@ -1,6 +1,7 @@
 import os
 import sys
 import uuid
+import re
 from functools import wraps
 
 from flask import (
@@ -72,6 +73,7 @@ from db_operations import (
     get_all_examinations,
     get_prediction_by_id,
     get_admin_dashboard_stats,
+    get_patient_examinations_history,
 )
 
 from pdf_report import generate_pdf_report
@@ -457,6 +459,40 @@ def staff_create_examination():
     }), 201
 
 
+@app.route("/staff/patient/<int:patient_id>/summary", methods=["GET"])
+@role_required("staff", "admin")
+def staff_patient_summary(patient_id):
+    patient = get_patient(patient_id)
+    if not patient:
+        return jsonify({"success": False, "error": "Patient not found."}), 404
+
+    history = get_patient_examinations_history(patient_id)
+
+    formatted_history = []
+    for item in history:
+        row = dict(item)
+        if row.get("examined_at"):
+            row["examined_at_str"] = row["examined_at"].strftime("%d %b %Y, %I:%M %p")
+        else:
+            row["examined_at_str"] = "N/A"
+        if row.get("confidence_score") is not None:
+            row["confidence_percent"] = round(float(row["confidence_score"]) * 100, 1)
+        else:
+            row["confidence_percent"] = None
+        formatted_history.append(row)
+
+    latest_exam = formatted_history[0] if formatted_history else None
+
+    return jsonify({
+        "success": True,
+        "patient": patient,
+        "has_history": len(formatted_history) > 0,
+        "total_examinations": len(formatted_history),
+        "latest_examination": latest_exam,
+        "history": formatted_history
+    })
+
+
 # --------------------------------------------------
 # PORTAL 3: DOCTOR PORTAL
 # --------------------------------------------------
@@ -477,6 +513,86 @@ def doctor_dashboard():
     return render_template("doctor/dashboard.html", examinations=examinations)
 
 
+@app.route("/doctor/search-patients", methods=["GET"])
+@role_required("doctor")
+def doctor_search_patients():
+    query = request.args.get("q", "").strip()
+    patients = search_patients(query)
+    return jsonify({"success": True, "patients": patients})
+
+
+
+def compute_examination_comparison(history):
+    """
+    Given a list of examinations sorted newest-first (history[0] is latest, history[1] is previous),
+    computes objective previous-vs-current comparison metrics and statement without clinical bias.
+    """
+    if not history or len(history) < 2:
+        return {
+            "has_comparison": False,
+            "message": "At least two examinations are required to perform a previous-versus-current comparison."
+        }
+
+    latest = history[0]
+    previous = history[1]
+
+    # Confidence formatting
+    latest_conf = float(latest["confidence_score"] * 100) if latest.get("confidence_score") is not None else None
+    prev_conf = float(previous["confidence_score"] * 100) if previous.get("confidence_score") is not None else None
+
+    # Determine class change statement
+    latest_disease = latest.get("detected_disease")
+    prev_disease = previous.get("detected_disease")
+
+    disease_summary = None
+    if latest_disease and prev_disease:
+        if latest_disease == prev_disease:
+            disease_summary = "The predicted class is unchanged between the two examinations."
+        else:
+            disease_summary = f"The predicted class differs from the previous examination (previously '{prev_disease}', currently '{latest_disease}')."
+    elif not latest_disease and not prev_disease:
+        disease_summary = "Neither examination has AI prediction data available yet."
+    elif not prev_disease:
+        disease_summary = f"Previous examination had no prediction; current examination detected '{latest_disease}'."
+    else:
+        disease_summary = f"Previous examination detected '{prev_disease}'; current examination has no prediction recorded yet."
+
+    # Determine confidence change statement
+    conf_summary = None
+    if latest_conf is not None and prev_conf is not None:
+        diff = latest_conf - prev_conf
+        if abs(diff) < 0.05:
+            conf_summary = f"The AI confidence score is essentially unchanged ({prev_conf:.1f}% vs {latest_conf:.1f}%)."
+        elif diff > 0:
+            conf_summary = f"The AI confidence score increased from {prev_conf:.1f}% to {latest_conf:.1f}% (+{diff:.1f}%)."
+        else:
+            conf_summary = f"The AI confidence score decreased from {prev_conf:.1f}% to {latest_conf:.1f}% ({diff:.1f}%)."
+    elif latest_conf is not None:
+        conf_summary = f"Current examination AI confidence is {latest_conf:.1f}%; previous examination has no recorded confidence score."
+    elif prev_conf is not None:
+        conf_summary = f"Previous examination AI confidence was {prev_conf:.1f}%; current examination has no recorded confidence score."
+    else:
+        conf_summary = "Confidence scores are not available for either examination."
+
+    safety_notice = (
+        "AI results are intended to support screening and clinical review. "
+        "Changes in predictions or confidence scores do not independently establish "
+        "clinical improvement or deterioration. A qualified eye specialist should "
+        "interpret the findings and determine appropriate next steps."
+    )
+
+    return {
+        "has_comparison": True,
+        "latest": latest,
+        "previous": previous,
+        "latest_conf": latest_conf,
+        "prev_conf": prev_conf,
+        "disease_summary": disease_summary,
+        "conf_summary": conf_summary,
+        "safety_notice": safety_notice,
+    }
+
+
 @app.route("/doctor/examination/<int:examination_id>", methods=["GET"])
 @role_required("doctor")
 def doctor_examination_detail(examination_id):
@@ -493,11 +609,49 @@ def doctor_examination_detail(examination_id):
     if not exam:
         return abort(404)
 
-    # STRICT CLINICAL RESTRICTION: Only assigned doctor can view
-    if exam["doctor_id"] != doctor_id:
-        return render_template("403.html", message="Unauthorized: This examination is assigned to a different clinician."), 403
+    # Retrieve patient's full examination history
+    patient_id = exam["patient_id"]
+    history = get_patient_examinations_history(patient_id)
 
-    return render_template("doctor/examination_detail.html", exam=exam)
+    # Compute comparison between the latest two examinations
+    comparison = compute_examination_comparison(history)
+
+    is_assigned = (exam.get("doctor_id") == doctor_id)
+
+    return render_template(
+        "doctor/examination_detail.html",
+        exam=exam,
+        history=history,
+        comparison=comparison,
+        is_assigned=is_assigned,
+    )
+
+
+@app.route("/doctor/patient/<int:patient_id>/history", methods=["GET"])
+@role_required("doctor")
+def doctor_patient_history(patient_id):
+    doctor_id = session.get("doctor_id")
+    if not doctor_id:
+        doc = get_doctor_by_user_id(session["user_id"])
+        if doc:
+            doctor_id = doc["doctor_id"]
+            session["doctor_id"] = doctor_id
+        else:
+            return abort(403)
+
+    patient = get_patient(patient_id)
+    if not patient:
+        return abort(404)
+
+    history = get_patient_examinations_history(patient_id)
+    comparison = compute_examination_comparison(history)
+
+    return render_template(
+        "doctor/patient_history.html",
+        patient=patient,
+        history=history,
+        comparison=comparison,
+    )
 
 
 # --------------------------------------------------
@@ -514,9 +668,11 @@ def register_patient():
     patient_name = str(data.get("patient_name", "")).strip()
     age_value = data.get("age")
     place = str(data.get("place", "")).strip()
+    contact_number = str(data.get("contact_number", "")).strip()
+    gender = str(data.get("gender", "")).strip() or None
 
     if not patient_name or len(patient_name) > 150:
-        return jsonify({"success": False, "error": "Patient name is required (max 150 chars)."}), 400
+        return jsonify({"success": False, "error": "Patient full name is required (max 150 chars)."}), 400
 
     if not place or len(place) > 150:
         return jsonify({"success": False, "error": "Place is required (max 150 chars)."}), 400
@@ -528,8 +684,22 @@ def register_patient():
     except (TypeError, ValueError):
         return jsonify({"success": False, "error": "Please enter a valid age between 1 and 120."}), 400
 
+    if contact_number:
+        # Validate contact number format: 7 to 20 chars, allowed digits, plus, hyphens, spaces, parens
+        if not re.match(r"^\+?[0-9\s\-()]{7,20}$", contact_number):
+            return jsonify({
+                "success": False,
+                "error": "Invalid contact number format. Please provide a valid phone number (e.g. +1-555-0199 or 9876543210)."
+            }), 400
+
     try:
-        patient_id = save_patient(patient_name=patient_name, age=age, place=place)
+        patient_id = save_patient(
+            patient_name=patient_name,
+            age=age,
+            place=place,
+            contact_number=contact_number or None,
+            gender=gender
+        )
     except Exception as error:
         app.logger.exception("Patient registration failed: %s", error)
         return jsonify({"success": False, "error": "Unable to save patient details in database."}), 500
@@ -546,6 +716,8 @@ def register_patient():
             "patient_name": patient_name,
             "age": age,
             "place": place,
+            "contact_number": contact_number,
+            "gender": gender,
         },
         "next_page": f"/upload?patient_id={patient_id}",
     }), 201
@@ -775,6 +947,20 @@ def handle_predict():
         "report_url": report_url,
         "report_error": report_error,
     }), 200
+
+
+# SERVE UPLOADED FUNDUS SCANS (PROTECTED)
+# --------------------------------------------------
+
+@app.route("/backend/uploads/<path:filename>", methods=["GET"])
+@app.route("/uploads/<path:filename>", methods=["GET"])
+def serve_uploads(filename):
+    # Ensure safe path traversal
+    safe_path = os.path.realpath(os.path.join(UPLOAD_DIR, filename))
+    if not safe_path.startswith(os.path.realpath(UPLOAD_DIR)):
+        abort(403)
+
+    return send_from_directory(UPLOAD_DIR, filename)
 
 
 # --------------------------------------------------

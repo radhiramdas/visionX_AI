@@ -47,11 +47,35 @@
             </p>
         </div>
 
+        <!-- Patient Record Search Card -->
+        <div class="clinical-card" style="margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div>
+                    <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0;">
+                        Patient Record Search
+                    </h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0.2rem 0 0;">
+                        Search registered patients by Patient ID, Full Name, or Clinic City to review full longitudinal history.
+                    </p>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem;">
+                <input type="text" id="doctor-patient-search-input" class="contact-input" placeholder="Search by Patient ID (e.g. 6), Name, or Location..." style="flex: 1;">
+                <button type="button" class="btn-primary-cyan" id="btn-doctor-search" style="padding: 0.6rem 1.4rem;">
+                    Search Patient
+                </button>
+            </div>
+
+            <div id="doctor-search-results" style="display: none; margin-top: 1rem; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 0.5rem; max-height: 240px; overflow-y: auto;">
+            </div>
+        </div>
+
         <!-- Examination List -->
         <div class="clinical-card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                 <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">
-                    Patient Queue & Evaluation History
+                    Assigned Patient Queue & Case Inferences
                 </h3>
                 <span style="padding: 0.25rem 0.75rem; border-radius: var(--radius-full); background: rgba(14, 165, 233, 0.1); color: var(--accent-blue); font-size: 0.82rem; font-weight: 700;">
                     Total Assigned: {{ examinations|length }}
@@ -100,9 +124,14 @@
                                 {% endif %}
                             </td>
                             <td style="padding: 0.85rem 1rem;">
-                                <a href="/doctor/examination/{{ ex.examination_id }}" class="btn-primary-cyan" style="padding: 0.35rem 0.85rem; font-size: 0.8rem; border-radius: var(--radius-sm);">
-                                    Inspect Case &rarr;
-                                </a>
+                                <div style="display: flex; gap: 0.4rem; align-items: center;">
+                                    <a href="/doctor/examination/{{ ex.examination_id }}" class="btn-primary-cyan" style="padding: 0.35rem 0.85rem; font-size: 0.8rem; border-radius: var(--radius-sm); white-space: nowrap;">
+                                        Inspect Case &rarr;
+                                    </a>
+                                    <a href="/doctor/patient/{{ ex.patient_id }}/history" class="btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.78rem; border-radius: var(--radius-sm); white-space: nowrap;">
+                                        Patient History
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
@@ -125,5 +154,54 @@
             {% endif %}
         </div>
     </main>
+
+    <script>
+        const searchInput = document.getElementById('doctor-patient-search-input');
+        const searchBtn = document.getElementById('btn-doctor-search');
+        const resultsBox = document.getElementById('doctor-search-results');
+
+        async function performDoctorSearch() {
+            const query = searchInput.value.trim();
+            if (!query) {
+                resultsBox.style.display = 'none';
+                return;
+            }
+
+            resultsBox.style.display = 'block';
+            resultsBox.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:0.5rem; margin:0; font-size:0.85rem;">Searching patients...</p>';
+
+            try {
+                const res = await fetch(`/doctor/search-patients?q=${encodeURIComponent(query)}`);
+                const data = await res.json();
+                if (data.success && data.patients && data.patients.length > 0) {
+                    resultsBox.innerHTML = data.patients.map(p => `
+                        <div style="padding: 0.65rem 0.85rem; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong style="color: var(--text-primary); font-size: 0.92rem;">#${p.patient_id} — ${p.patient_name}</strong>
+                                <span style="font-size: 0.82rem; color: var(--text-muted); margin-left: 0.5rem;">(${p.age} Years &bull; ${p.place})</span>
+                            </div>
+                            <a href="/doctor/patient/${p.patient_id}/history" class="btn-primary-cyan" style="padding: 0.3rem 0.8rem; font-size: 0.8rem; border-radius: var(--radius-sm);">
+                                Open Full History &rarr;
+                            </a>
+                        </div>
+                    `).join('');
+                } else {
+                    resultsBox.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:0.75rem; margin:0; font-size:0.88rem;">No matching patient records found.</p>';
+                }
+            } catch (err) {
+                resultsBox.innerHTML = '<p style="color:var(--color-danger); text-align:center; padding:0.75rem; margin:0; font-size:0.88rem;">Search request failed.</p>';
+            }
+        }
+
+        if (searchBtn && searchInput) {
+            searchBtn.addEventListener('click', performDoctorSearch);
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    performDoctorSearch();
+                }
+            });
+        }
+    </script>
 </body>
 </html>

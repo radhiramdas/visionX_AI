@@ -6,10 +6,10 @@ from db_config import get_db_connection
 # PATIENT OPERATIONS (PRESERVED & EXTENDED)
 # =========================================================================
 
-def save_patient(patient_name, age, place):
+def save_patient(patient_name, age, place, contact_number=None, gender=None):
     """
     Save patient details in MySQL and return the generated patient ID.
-    Preserves existing functionality.
+    Supports optional contact_number and gender fields.
     """
     connection = None
     cursor = None
@@ -19,8 +19,8 @@ def save_patient(patient_name, age, place):
             return None
 
         cursor = connection.cursor()
-        query = "INSERT INTO patients (patient_name, age, place) VALUES (%s, %s, %s)"
-        cursor.execute(query, (patient_name, age, place))
+        query = "INSERT INTO patients (patient_name, age, place, contact_number, gender) VALUES (%s, %s, %s, %s, %s)"
+        cursor.execute(query, (patient_name, age, place, contact_number, gender))
         patient_id = cursor.lastrowid
         connection.commit()
         return patient_id
@@ -47,7 +47,7 @@ def get_patient(patient_id):
 
         cursor = connection.cursor(dictionary=True)
         query = """
-            SELECT patient_id, patient_name, age, place, created_at
+            SELECT patient_id, patient_name, age, place, contact_number, gender, created_at
             FROM patients
             WHERE patient_id = %s
         """
@@ -64,7 +64,7 @@ def get_patient(patient_id):
 
 
 def search_patients(search_term=""):
-    """Search for existing patients by name, place, or ID."""
+    """Search for existing patients by name, place, contact, or ID."""
     connection = None
     cursor = None
     try:
@@ -73,15 +73,19 @@ def search_patients(search_term=""):
             return []
 
         cursor = connection.cursor(dictionary=True)
-        term = f"%{search_term.strip()}%"
+        clean_term = search_term.strip()
+        term = f"%{clean_term}%"
         query = """
-            SELECT patient_id, patient_name, age, place, created_at
+            SELECT patient_id, patient_name, age, place, contact_number, gender, created_at
             FROM patients
-            WHERE patient_name LIKE %s OR place LIKE %s OR CAST(patient_id AS CHAR) LIKE %s
+            WHERE patient_name LIKE %s 
+               OR place LIKE %s 
+               OR contact_number LIKE %s 
+               OR CAST(patient_id AS CHAR) LIKE %s
             ORDER BY patient_id DESC
             LIMIT 50
         """
-        cursor.execute(query, (term, term, term))
+        cursor.execute(query, (term, term, term, term))
         return cursor.fetchall()
     except Exception as error:
         print(f"Error searching patients: {error}")
@@ -103,7 +107,7 @@ def get_all_patients(limit=100):
             return []
 
         cursor = connection.cursor(dictionary=True)
-        query = "SELECT patient_id, patient_name, age, place, created_at FROM patients ORDER BY patient_id DESC LIMIT %s"
+        query = "SELECT patient_id, patient_name, age, place, contact_number, gender, created_at FROM patients ORDER BY patient_id DESC LIMIT %s"
         cursor.execute(query, (limit,))
         return cursor.fetchall()
     except Exception as error:
@@ -774,6 +778,77 @@ def get_admin_dashboard_stats():
     except Exception as error:
         print(f"Error fetching admin stats: {error}")
         return stats
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if connection is not None and connection.is_connected():
+            connection.close()
+
+
+def get_patient_examinations_history(patient_id):
+    """
+    Retrieve all examinations for a specific patient in reverse chronological order
+    (newest first). Safely aggregates the latest prediction and eye image per examination
+    to prevent duplicate rows if multiple images/predictions exist.
+    """
+    connection = None
+    cursor = None
+    try:
+        connection = get_db_connection()
+        if connection is None:
+            return []
+
+        cursor = connection.cursor(dictionary=True)
+        # Using a subquery/grouping pattern to ensure 1 unique row per examination_id,
+        # fetching the latest eye_image and latest prediction associated with each examination.
+        query = """
+            SELECT
+                e.examination_id,
+                e.patient_id,
+                e.doctor_id,
+                e.staff_user_id,
+                e.examined_at,
+                e.notes,
+                p.patient_name,
+                p.age AS patient_age,
+                p.place AS patient_place,
+                p.contact_number AS patient_contact,
+                p.gender AS patient_gender,
+                d.full_name AS doctor_name,
+                d.specialization AS doctor_specialization,
+                u_staff.username AS staff_username,
+                img.image_id,
+                img.image_name,
+                img.image_path,
+                pred.prediction_id,
+                pred.model_version,
+                pred.detected_disease,
+                pred.confidence_score,
+                pred.heatmap_url,
+                pred.report_path,
+                pred.processed_at
+            FROM examinations e
+            JOIN patients p ON e.patient_id = p.patient_id
+            JOIN doctors d ON e.doctor_id = d.doctor_id
+            LEFT JOIN users u_staff ON e.staff_user_id = u_staff.user_id
+            LEFT JOIN eye_images img ON img.image_id = (
+                SELECT MAX(img2.image_id)
+                FROM eye_images img2
+                WHERE img2.examination_id = e.examination_id
+            )
+            LEFT JOIN ai_predictions pred ON pred.prediction_id = (
+                SELECT MAX(pred2.prediction_id)
+                FROM ai_predictions pred2
+                WHERE pred2.image_id = img.image_id
+            )
+            WHERE e.patient_id = %s
+            ORDER BY e.examined_at DESC, e.examination_id DESC
+        """
+        cursor.execute(query, (patient_id,))
+        return cursor.fetchall()
+    except Exception as error:
+        print(f"Error retrieving patient examination history: {error}")
+        return []
     finally:
         if cursor is not None:
             cursor.close()

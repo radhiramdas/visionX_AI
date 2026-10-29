@@ -129,7 +129,7 @@
                     </div>
                     <div class="image-display-frame">
                         {% if exam.image_path %}
-                        <img src="/{{ exam.image_path }}" alt="Original Fundus Scan">
+                        <img src="/{{ exam.image_path|replace('\\', '/') }}" alt="Original Fundus Scan">
                         {% else %}
                         <p style="color: var(--text-muted);">Image file not accessible.</p>
                         {% endif %}
@@ -156,7 +156,7 @@
             <div style="text-align: center; margin-top: 2rem; padding: 1.5rem; background: var(--bg-surface-subtle); border-radius: var(--radius-lg); border: 1px solid var(--border-subtle);">
                 <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">Standardized Clinical PDF Report</h4>
                 <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
-                    Download the complete archival clinical summary including patient history, visual evidence, and model parameters.
+                    Download the complete archival clinical summary including patient demographics, visual evidence, and model parameters.
                 </p>
                 <a href="/download-report/{{ exam.prediction_id }}" class="btn-primary-cyan" style="padding: 0.65rem 1.75rem; font-size: 0.95rem; border-radius: var(--radius-md);">
                     Download Clinical PDF Report
@@ -176,19 +176,301 @@
             </div>
             {% endif %}
 
-            <!-- Clinical Disclaimer -->
-            <div class="clinical-callout" style="margin-top: 2rem;">
-                <div class="clinical-callout-icon">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
-                    </svg>
+            <!-- =========================================================================
+                 SECTION C & D: PREVIOUS-VERSUS-CURRENT EXAMINATION COMPARISON
+                 ========================================================================= -->
+            <div style="margin-top: 2.5rem; padding-top: 2rem; border-top: 2px solid var(--border-subtle);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                    <div>
+                        <span class="section-tag" style="margin-bottom: 0.25rem;">Longitudinal Analysis</span>
+                        <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin: 0;">
+                            Previous-versus-Current Examination Comparison
+                        </h2>
+                    </div>
+                    {% if comparison and comparison.has_comparison %}
+                    <span style="padding: 0.3rem 0.85rem; border-radius: var(--radius-full); background: rgba(6, 182, 212, 0.12); color: var(--accent-cyan); font-size: 0.82rem; font-weight: 700;">
+                        Latest (#{{ comparison.latest.examination_id }}) vs Previous (#{{ comparison.previous.examination_id }})
+                    </span>
+                    {% endif %}
                 </div>
-                <div class="clinical-callout-text">
-                    <h4>Clinical Decision Support Notice</h4>
-                    <p>
-                        This dashboard provides AI screening assistance. Predictions must be verified by the ophthalmologist in combination with direct biomicroscopy, optical coherence tomography (OCT), or fluorescein angiography.
+
+                {% if comparison and comparison.has_comparison %}
+                <!-- Comparison Summary Badges -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                    <div style="background: var(--bg-surface-subtle); border: 1px solid var(--border-card); border-radius: var(--radius-md); padding: 1.15rem;">
+                        <span style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px;">Classification Observation</span>
+                        <p style="font-weight: 600; color: var(--text-primary); margin: 0.35rem 0 0; font-size: 0.95rem;">
+                            {{ comparison.disease_summary }}
+                        </p>
+                    </div>
+                    <div style="background: var(--bg-surface-subtle); border: 1px solid var(--border-card); border-radius: var(--radius-md); padding: 1.15rem;">
+                        <span style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px;">AI Confidence Variation</span>
+                        <p style="font-weight: 600; color: var(--text-primary); margin: 0.35rem 0 0; font-size: 0.95rem;">
+                            {{ comparison.conf_summary }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Structured Comparison Table -->
+                <div style="overflow-x: auto; margin-bottom: 2rem;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-subtle); background: var(--bg-surface-subtle);">
+                                <th style="padding: 0.85rem 1rem; color: var(--text-muted); text-transform: uppercase; font-size: 0.78rem; width: 25%;">Information</th>
+                                <th style="padding: 0.85rem 1rem; color: var(--text-secondary); width: 37.5%; font-weight: 700;">
+                                    Previous Examination (#{{ comparison.previous.examination_id }})
+                                </th>
+                                <th style="padding: 0.85rem 1rem; color: var(--accent-cyan); width: 37.5%; font-weight: 700;">
+                                    Current / Latest Examination (#{{ comparison.latest.examination_id }})
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid var(--border-subtle);">
+                                <td style="padding: 0.85rem 1rem; font-weight: 600; color: var(--text-muted);">Examination Date</td>
+                                <td style="padding: 0.85rem 1rem;">{{ comparison.previous.examined_at }}</td>
+                                <td style="padding: 0.85rem 1rem; font-weight: 600; color: var(--text-primary);">{{ comparison.latest.examined_at }}</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-subtle);">
+                                <td style="padding: 0.85rem 1rem; font-weight: 600; color: var(--text-muted);">Doctor Name</td>
+                                <td style="padding: 0.85rem 1rem;">Dr. {{ comparison.previous.doctor_name }}</td>
+                                <td style="padding: 0.85rem 1rem; font-weight: 600; color: var(--text-primary);">Dr. {{ comparison.latest.doctor_name }}</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-subtle);">
+                                <td style="padding: 0.85rem 1rem; font-weight: 600; color: var(--text-muted);">Predicted Eye Disease</td>
+                                <td style="padding: 0.85rem 1rem;">
+                                    {% if comparison.previous.detected_disease %}
+                                    <strong>{{ comparison.previous.detected_disease }}</strong>
+                                    {% else %}
+                                    <span style="color: var(--text-muted); font-style: italic;">No prediction</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.85rem 1rem;">
+                                    {% if comparison.latest.detected_disease %}
+                                    <strong style="color: var(--accent-cyan);">{{ comparison.latest.detected_disease }}</strong>
+                                    {% else %}
+                                    <span style="color: var(--text-muted); font-style: italic;">No prediction</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-subtle);">
+                                <td style="padding: 0.85rem 1rem; font-weight: 600; color: var(--text-muted);">AI Confidence Score</td>
+                                <td style="padding: 0.85rem 1rem;">
+                                    {% if comparison.prev_conf is not none %}
+                                    {{ "%.2f"|format(comparison.prev_conf) }}%
+                                    {% else %}—{% endif %}
+                                </td>
+                                <td style="padding: 0.85rem 1rem; font-weight: 600; color: var(--text-primary);">
+                                    {% if comparison.latest_conf is not none %}
+                                    {{ "%.2f"|format(comparison.latest_conf) }}%
+                                    {% else %}—{% endif %}
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-subtle);">
+                                <td style="padding: 0.85rem 1rem; font-weight: 600; color: var(--text-muted);">Examination Notes</td>
+                                <td style="padding: 0.85rem 1rem; color: var(--text-secondary);">
+                                    {{ comparison.previous.notes or "No notes recorded." }}
+                                </td>
+                                <td style="padding: 0.85rem 1rem; color: var(--text-secondary);">
+                                    {{ comparison.latest.notes or "No notes recorded." }}
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-subtle);">
+                                <td style="padding: 0.85rem 1rem; font-weight: 600; color: var(--text-muted);">PDF Report</td>
+                                <td style="padding: 0.85rem 1rem;">
+                                    {% if comparison.previous.prediction_id and comparison.previous.report_path %}
+                                    <a href="/download-report/{{ comparison.previous.prediction_id }}" class="btn-outline" style="padding: 0.3rem 0.75rem; font-size: 0.78rem;">
+                                        Download Previous Report
+                                    </a>
+                                    {% else %}
+                                    <span style="color: var(--text-muted); font-size: 0.85rem;">Not available</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.85rem 1rem;">
+                                    {% if comparison.latest.prediction_id and comparison.latest.report_path %}
+                                    <a href="/download-report/{{ comparison.latest.prediction_id }}" class="btn-primary-cyan" style="padding: 0.3rem 0.75rem; font-size: 0.78rem;">
+                                        Download Current Report
+                                    </a>
+                                    {% else %}
+                                    <span style="color: var(--text-muted); font-size: 0.85rem;">Not available</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Side-by-Side Visual Comparison: Fundus & Grad-CAM -->
+                <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1rem;">
+                    Visual Evidence Comparison (Previous vs Current)
+                </h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                    <!-- Previous Scan -->
+                    <div class="image-panel-card">
+                        <div class="image-panel-titlebar">
+                            <span>Previous Scan (#{{ comparison.previous.examination_id }})</span>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">{{ comparison.previous.examined_at }}</span>
+                        </div>
+                        <div class="image-display-frame">
+                            {% if comparison.previous.image_path %}
+                            <img src="/{{ comparison.previous.image_path|replace('\\', '/') }}" alt="Previous Fundus Scan">
+                            {% else %}
+                            <p style="color: var(--text-muted);">No image available</p>
+                            {% endif %}
+                        </div>
+                        {% if comparison.previous.heatmap_url %}
+                        <div style="padding: 0.75rem; background: var(--bg-surface); border-top: 1px solid var(--border-subtle); text-align: center;">
+                            <span style="font-size: 0.75rem; color: var(--accent-cyan); font-weight: 700; text-transform: uppercase;">Grad-CAM Heatmap</span>
+                            <div style="height: 180px; margin-top: 0.5rem; display: flex; align-items: center; justify-content: center; background: #020617; border-radius: var(--radius-sm); padding: 5px;">
+                                <img src="/generated/{{ comparison.previous.heatmap_url }}" alt="Previous Grad-CAM" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Current Scan -->
+                    <div class="image-panel-card">
+                        <div class="image-panel-titlebar">
+                            <span style="color: var(--accent-cyan); font-weight: 700;">Current Scan (#{{ comparison.latest.examination_id }})</span>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">{{ comparison.latest.examined_at }}</span>
+                        </div>
+                        <div class="image-display-frame">
+                            {% if comparison.latest.image_path %}
+                            <img src="/{{ comparison.latest.image_path|replace('\\', '/') }}" alt="Current Fundus Scan">
+                            {% else %}
+                            <p style="color: var(--text-muted);">No image available</p>
+                            {% endif %}
+                        </div>
+                        {% if comparison.latest.heatmap_url %}
+                        <div style="padding: 0.75rem; background: var(--bg-surface); border-top: 1px solid var(--border-subtle); text-align: center;">
+                            <span style="font-size: 0.75rem; color: var(--accent-cyan); font-weight: 700; text-transform: uppercase;">Grad-CAM Heatmap</span>
+                            <div style="height: 180px; margin-top: 0.5rem; display: flex; align-items: center; justify-content: center; background: #020617; border-radius: var(--radius-sm); padding: 5px;">
+                                <img src="/generated/{{ comparison.latest.heatmap_url }}" alt="Current Grad-CAM" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% else %}
+                <!-- Notice when patient has only 1 examination -->
+                <div style="background: var(--bg-surface-subtle); border: 1px solid var(--border-card); border-radius: var(--radius-lg); padding: 2rem; text-align: center; margin-bottom: 2rem;">
+                    <div class="feature-icon-wrapper" style="margin: 0 auto 1rem; width: 50px; height: 50px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                    </div>
+                    <h4 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.35rem;">
+                        Single Examination on Record
+                    </h4>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); max-width: 520px; margin: 0 auto;">
+                        This patient currently has only one recorded examination (#{{ exam.examination_id }}). At least two examinations are required to perform an automated previous-versus-current longitudinal comparison.
                     </p>
                 </div>
+                {% endif %}
+
+                <!-- STRICT MEDICAL SAFETY DISCLAIMER -->
+                <div class="clinical-callout" style="background: rgba(14, 165, 233, 0.08); border-color: rgba(14, 165, 233, 0.35);">
+                    <div class="clinical-callout-icon" style="color: var(--color-info);">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                    </div>
+                    <div class="clinical-callout-text">
+                        <h4 style="color: var(--text-primary);">Clinical Review & Safety Notice</h4>
+                        <p style="color: var(--text-secondary); margin-top: 0.25rem;">
+                            AI results are intended to support screening and clinical review. Changes in predictions or confidence scores do not independently establish clinical improvement or deterioration. A qualified eye specialist should interpret the findings and determine appropriate next steps.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =========================================================================
+                 SECTION B: COMPLETE PATIENT EXAMINATION HISTORY LIST
+                 ========================================================================= -->
+            <div style="margin-top: 3rem; padding-top: 2rem; border-top: 2px solid var(--border-subtle);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                    <div>
+                        <span class="section-tag" style="margin-bottom: 0.25rem;">Longitudinal Records</span>
+                        <h3 style="font-size: 1.35rem; font-weight: 700; color: var(--text-primary); margin: 0;">
+                            Patient Full Examination History
+                        </h3>
+                    </div>
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">
+                        Total Recorded Examinations: <strong style="color: var(--text-primary);">{{ history|length }}</strong>
+                    </span>
+                </div>
+
+                {% if history %}
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-subtle); color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px;">
+                                <th style="padding: 0.75rem 1rem;">Exam #</th>
+                                <th style="padding: 0.75rem 1rem;">Exam Date</th>
+                                <th style="padding: 0.75rem 1rem;">Doctor</th>
+                                <th style="padding: 0.75rem 1rem;">Predicted Eye Disease</th>
+                                <th style="padding: 0.75rem 1rem;">AI Confidence</th>
+                                <th style="padding: 0.75rem 1rem;">Notes</th>
+                                <th style="padding: 0.75rem 1rem;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for h in history %}
+                            <tr style="border-bottom: 1px solid var(--border-subtle); {% if h.examination_id == exam.examination_id %}background: rgba(6, 182, 212, 0.05);{% endif %}">
+                                <td style="padding: 0.85rem 1rem; font-weight: 700;">
+                                    #{{ h.examination_id }}
+                                    {% if h.examination_id == exam.examination_id %}
+                                    <span style="font-size: 0.7rem; color: var(--accent-cyan); font-weight: 700; margin-left: 4px;">(Current)</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.85rem 1rem; color: var(--text-muted); font-size: 0.84rem;">
+                                    {{ h.examined_at }}
+                                </td>
+                                <td style="padding: 0.85rem 1rem; font-weight: 500;">
+                                    Dr. {{ h.doctor_name }}
+                                </td>
+                                <td style="padding: 0.85rem 1rem;">
+                                    {% if h.detected_disease %}
+                                    <span style="font-weight: 700; color: var(--accent-cyan);">{{ h.detected_disease }}</span>
+                                    {% else %}
+                                    <span style="color: var(--text-muted); font-style: italic;">No Scan Yet</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.85rem 1rem;">
+                                    {% if h.confidence_score is not none %}
+                                    <span style="font-weight: 600;">{{ "%.1f"|format(h.confidence_score * 100) }}%</span>
+                                    {% else %}—{% endif %}
+                                </td>
+                                <td style="padding: 0.85rem 1rem; color: var(--text-secondary); max-width: 220px; font-size: 0.82rem;">
+                                    {{ h.notes or "—" }}
+                                </td>
+                                <td style="padding: 0.85rem 1rem;">
+                                    <div style="display: flex; gap: 0.4rem; align-items: center;">
+                                        <a href="/doctor/examination/{{ h.examination_id }}" class="btn-primary-cyan" style="padding: 0.25rem 0.65rem; font-size: 0.75rem; border-radius: var(--radius-sm); white-space: nowrap;">
+                                            Open Exam
+                                        </a>
+                                        {% if h.prediction_id and h.report_path %}
+                                        <a href="/download-report/{{ h.prediction_id }}" class="btn-outline" style="padding: 0.25rem 0.65rem; font-size: 0.75rem; border-radius: var(--radius-sm); white-space: nowrap;">
+                                            PDF
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div style="text-align: center; padding: 2rem 1rem; color: var(--text-muted);">
+                    No previous examinations found.
+                </div>
+                {% endif %}
             </div>
         </div>
     </main>

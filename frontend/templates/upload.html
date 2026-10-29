@@ -93,6 +93,17 @@
                         <span class="field-label">Location / Clinic</span>
                         <span class="field-value" id="patient-place">{{ patient.place }}</span>
                     </div>
+                    {% if examination_id %}
+                    <div class="patient-data-field" id="exam-id-field">
+                        <span class="field-label">Examination ID</span>
+                        <span class="field-value" id="patient-exam-id" style="color: var(--accent-cyan); font-weight: 700;">#{{ examination_id }}</span>
+                    </div>
+                    {% else %}
+                    <div class="patient-data-field" id="exam-id-field" style="display: none;">
+                        <span class="field-label">Examination ID</span>
+                        <span class="field-value" id="patient-exam-id" style="color: var(--accent-cyan); font-weight: 700;">--</span>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 

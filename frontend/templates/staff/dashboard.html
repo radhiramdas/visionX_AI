@@ -38,280 +38,1014 @@
         </div>
     </header>
 
-    <main class="page-container" style="max-width: 1280px;">
+    <main class="page-container" style="max-width: 1320px;">
+        <!-- Page Title & Header -->
         <div class="page-header-box" style="text-align: left; margin-bottom: 2rem;">
-            <span class="section-tag">Clinical Intake & Screening Workstation</span>
+            <span class="section-tag">Clinical Intake &amp; Screening Workstation</span>
             <h1 class="section-title" style="font-size: 2rem; margin-bottom: 0.25rem;">Patient Diagnostic Intake</h1>
             <p class="section-description" style="margin: 0;">
-                Register patients, search existing records, assign examining ophthalmologists, and perform AI screening.
+                Register new patients, search existing records, review longitudinal history, and initiate AI retinal screening sessions.
             </p>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 2rem; margin-bottom: 3rem;">
-            <!-- Start Examination Card -->
-            <div class="clinical-card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-                    <div>
-                        <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">Initiate New Examination</h3>
-                        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">Select patient and assigned physician</p>
-                    </div>
-                    <span style="padding: 0.25rem 0.65rem; border-radius: var(--radius-full); background: rgba(6, 182, 212, 0.1); color: var(--accent-cyan); font-size: 0.78rem; font-weight: 700;">
-                        Step 1 of 2
-                    </span>
-                </div>
-
-                <!-- Patient Selection Tabs -->
-                <div style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem;">
-                    <button type="button" class="btn-primary-cyan" id="tab-new-patient" style="padding: 0.45rem 1rem; font-size: 0.85rem;">
-                        + Register New Patient
+        <!-- Main Layout: 2 Columns -->
+        <div style="display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 2rem; margin-bottom: 3rem;">
+            <!-- Left Column: Patient Intake Workstation -->
+            <div>
+                <!-- Primary Action Switcher (Register New vs Search Existing) -->
+                <div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem;">
+                    <button type="button" class="btn-primary-cyan" id="btn-tab-register" style="padding: 0.65rem 1.4rem; font-size: 0.95rem; font-weight: 600;">
+                        + Register a New Patient
                     </button>
-                    <button type="button" class="btn-outline" id="tab-existing-patient" style="padding: 0.45rem 1rem; font-size: 0.85rem;">
-                        Search Existing Patient
+                    <button type="button" class="btn-outline" id="btn-tab-search" style="padding: 0.65rem 1.4rem; font-size: 0.95rem; font-weight: 600;">
+                        &#128269; Search Existing Patient
                     </button>
                 </div>
 
-                <!-- Form: New Patient Intake -->
-                <form id="new-patient-form" style="display: flex; flex-direction: column; gap: 1rem;">
-                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+                <!-- =========================================================================
+                     PANEL A: REGISTER A NEW PATIENT
+                     ========================================================================= -->
+                <div class="clinical-card" id="panel-register-patient">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
                         <div>
-                            <label class="field-label" style="margin-bottom: 0.25rem; display: block;">Patient Full Name</label>
-                            <input type="text" id="staff-patient-name" class="contact-input" placeholder="e.g. Eleanor Vance" required>
+                            <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin: 0;">
+                                New Patient Registration
+                            </h3>
+                            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0.2rem 0 0;">
+                                Enter demographic details to assign a permanent Unique Patient ID
+                            </p>
                         </div>
+                        <span style="padding: 0.25rem 0.65rem; border-radius: var(--radius-full); background: rgba(6, 182, 212, 0.1); color: var(--accent-cyan); font-size: 0.78rem; font-weight: 700;">
+                            Intake Form
+                        </span>
+                    </div>
+
+                    <!-- Alert message banner for registration -->
+                    <div id="register-alert" class="alert-banner error" style="display: none; margin-bottom: 1rem;">
+                        <span id="register-alert-text"></span>
+                    </div>
+
+                    <!-- Patient Registration Form -->
+                    <form id="form-register-patient" style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1rem;">
+                            <div>
+                                <label class="field-label" style="margin-bottom: 0.25rem; display: block;" for="reg-patient-name">Full Name *</label>
+                                <input type="text" id="reg-patient-name" class="contact-input" placeholder="e.g. Eleanor Vance" required autocomplete="name">
+                            </div>
+                            <div>
+                                <label class="field-label" style="margin-bottom: 0.25rem; display: block;" for="reg-patient-age">Age (Years) *</label>
+                                <input type="number" id="reg-patient-age" class="contact-input" placeholder="e.g. 52" min="1" max="120" required>
+                            </div>
+                            <div>
+                                <label class="field-label" style="margin-bottom: 0.25rem; display: block;" for="reg-patient-gender">Gender</label>
+                                <select id="reg-patient-gender" class="contact-input">
+                                    <option value="Unspecified">-- Select --</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div>
+                                <label class="field-label" style="margin-bottom: 0.25rem; display: block;" for="reg-patient-contact">Contact Number *</label>
+                                <input type="tel" id="reg-patient-contact" class="contact-input" placeholder="e.g. +1-555-0199 or 9876543210" required>
+                                <small style="color: var(--text-muted); font-size: 0.75rem;">Include country/area code if applicable</small>
+                            </div>
+                            <div>
+                                <label class="field-label" style="margin-bottom: 0.25rem; display: block;" for="reg-patient-place">Place / City / Clinic Center *</label>
+                                <input type="text" id="reg-patient-place" class="contact-input" placeholder="e.g. St. Jude Eye Center, NY" required>
+                            </div>
+                        </div>
+
+                        <!-- Doctor Assignment for the initial screening -->
                         <div>
-                            <label class="field-label" style="margin-bottom: 0.25rem; display: block;">Age (Years)</label>
-                            <input type="number" id="staff-patient-age" class="contact-input" placeholder="e.g. 52" min="1" max="120" required>
+                            <label class="field-label" style="margin-bottom: 0.25rem; display: block;" for="reg-doctor-select">Assign Ophthalmologist *</label>
+                            <select id="reg-doctor-select" class="contact-input" required>
+                                <option value="">-- Select Active Doctor --</option>
+                                {% for doc in doctors %}
+                                <option value="{{ doc.doctor_id }}">Dr. {{ doc.full_name }} ({{ doc.specialization or "Ophthalmologist" }})</option>
+                                {% endfor %}
+                            </select>
+                            {% if not doctors %}
+                            <small style="color: var(--color-danger); display: block; margin-top: 4px;">
+                                No active doctors registered. Please ask an administrator to provision a doctor account.
+                            </small>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label class="field-label" style="margin-bottom: 0.25rem; display: block;" for="reg-exam-notes">Clinical Notes (Optional)</label>
+                            <input type="text" id="reg-exam-notes" class="contact-input" placeholder="e.g. Routine diabetic retina screening, high BP history, or blurry vision">
+                        </div>
+
+                        <button type="submit" id="btn-submit-register" class="btn-primary-cyan" style="padding: 0.85rem; border-radius: var(--radius-md); justify-content: center; font-size: 1rem; margin-top: 0.5rem;">
+                            Register Patient &amp; Continue &rarr;
+                        </button>
+                    </form>
+
+                    <!-- Post-Registration Confirmation Box (Hidden initially) -->
+                    <div id="registration-confirmation-card" style="display: none; margin-top: 1.5rem; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-lg); padding: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <span style="padding: 0.3rem 0.85rem; border-radius: var(--radius-full); background: rgba(16, 185, 129, 0.15); color: var(--color-success); font-size: 0.85rem; font-weight: 700;">
+                                &check; Patient Successfully Registered in MySQL
+                            </span>
+                        </div>
+
+                        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.25rem;">
+                            <div style="font-size: 0.82rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 0.25rem;">
+                                Assigned Permanent Patient ID
+                            </div>
+                            <div style="font-size: 1.85rem; font-weight: 800; color: var(--accent-cyan);" id="conf-patient-id">
+                                #--
+                            </div>
+                        </div>
+
+                        <div class="patient-data-grid" style="margin-bottom: 1.5rem;">
+                            <div class="patient-data-field">
+                                <span class="field-label">Full Name</span>
+                                <span class="field-value" id="conf-patient-name">--</span>
+                            </div>
+                            <div class="patient-data-field">
+                                <span class="field-label">Age &amp; Gender</span>
+                                <span class="field-value"><span id="conf-patient-age">--</span>y &bull; <span id="conf-patient-gender">--</span></span>
+                            </div>
+                            <div class="patient-data-field">
+                                <span class="field-label">Contact Number</span>
+                                <span class="field-value" id="conf-patient-contact">--</span>
+                            </div>
+                            <div class="patient-data-field">
+                                <span class="field-label">Place / Center</span>
+                                <span class="field-value" id="conf-patient-place">--</span>
+                            </div>
+                            <div class="patient-data-field">
+                                <span class="field-label">Assigned Clinician</span>
+                                <span class="field-value" id="conf-doctor-name">--</span>
+                            </div>
+                            <div class="patient-data-field">
+                                <span class="field-label">Clinical Notes</span>
+                                <span class="field-value" id="conf-exam-notes">--</span>
+                            </div>
+                        </div>
+
+                        <!-- Proceed Button (Requirement 2A: Button labelled "Proceed to Eye Screening") -->
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <button type="button" id="btn-proceed-screening" class="btn-primary-cyan" style="flex: 1; padding: 0.85rem; font-size: 1rem; font-weight: 700; justify-content: center;">
+                                Proceed to Eye Screening &rarr;
+                            </button>
+                            <button type="button" id="btn-register-another" class="btn-outline" style="padding: 0.85rem 1.2rem;">
+                                + Register Another Patient
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- =========================================================================
+                     PANEL B: SEARCH AN EXISTING PATIENT
+                     ========================================================================= -->
+                <div class="clinical-card" id="panel-search-patient" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                        <div>
+                            <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin: 0;">
+                                Existing Patient Record Search
+                            </h3>
+                            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0.2rem 0 0;">
+                                Search by Unique Patient ID or Patient Name in MySQL
+                            </p>
+                        </div>
+                        <span style="padding: 0.25rem 0.65rem; border-radius: var(--radius-full); background: rgba(6, 182, 212, 0.1); color: var(--accent-cyan); font-size: 0.78rem; font-weight: 700;">
+                            MySQL Lookup
+                        </span>
+                    </div>
+
+                    <!-- Search Input Box -->
+                    <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
+                        <input type="text" id="patient-search-input" class="contact-input" placeholder="Enter Unique Patient ID (e.g. 1) or Patient Name..." style="flex: 1;">
+                        <button type="button" class="btn-primary-cyan" id="btn-do-search" style="padding: 0.65rem 1.5rem; font-weight: 600;">
+                            Search Patient
+                        </button>
+                    </div>
+
+                    <!-- Search Alert Banner (Not found, verification required, etc.) -->
+                    <div id="search-alert-banner" class="alert-banner warning" style="display: none; margin-bottom: 1rem;">
+                        <span id="search-alert-text"></span>
+                    </div>
+
+                    <!-- Search Results List -->
+                    <div id="search-results-container" style="display: none; margin-bottom: 1.5rem;">
+                        <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem;" id="results-count-label">
+                            Matching Patient Records
+                        </div>
+                        <div id="search-results-list" style="display: flex; flex-direction: column; gap: 0.6rem; max-height: 280px; overflow-y: auto; padding: 0.25rem;">
+                            <!-- Filled dynamically -->
                         </div>
                     </div>
 
-                    <div>
-                        <label class="field-label" style="margin-bottom: 0.25rem; display: block;">City / Place / Clinic Center</label>
-                        <input type="text" id="staff-patient-place" class="contact-input" placeholder="e.g. St. Jude Eye Center, NY" required>
-                    </div>
+                    <!-- =========================================================================
+                         SELECTED EXISTING PATIENT VIEW & PREVIOUS SCREENING SUMMARY
+                         ========================================================================= -->
+                    <div id="selected-patient-view" style="display: none; border-top: 2px solid var(--border-subtle); padding-top: 1.5rem;">
+                        <!-- Selected Patient Demographics Card -->
+                        <div class="patient-badge-card" style="margin-bottom: 1.5rem;">
+                            <div class="patient-badge-header">
+                                <div>
+                                    <span style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--accent-cyan); letter-spacing: 0.5px;">
+                                        Identified Patient Record
+                                    </span>
+                                    <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-top: 2px;">
+                                        <span id="sel-patient-name">--</span>
+                                    </h3>
+                                </div>
+                                <span style="font-size: 0.95rem; color: var(--text-primary); font-weight: 700; background: var(--bg-surface); padding: 0.35rem 0.85rem; border-radius: var(--radius-full); border: 1px solid var(--border-subtle);">
+                                    Unique Patient ID: <span style="color: var(--accent-cyan);" id="sel-patient-id">#--</span>
+                                </span>
+                            </div>
 
-                    <!-- Doctor Assignment -->
-                    <div>
-                        <label class="field-label" style="margin-bottom: 0.25rem; display: block;">Assign Ophthalmologist</label>
-                        <select id="staff-doctor-select" class="contact-input" required>
-                            <option value="">-- Select Active Doctor --</option>
-                            {% for doc in doctors %}
-                            <option value="{{ doc.doctor_id }}">Dr. {{ doc.full_name }} ({{ doc.specialization }})</option>
-                            {% endfor %}
-                        </select>
-                        {% if not doctors %}
-                        <small style="color: var(--color-danger); display: block; margin-top: 4px;">
-                            No active doctors registered. Please ask an administrator to provision a doctor account.
-                        </small>
-                        {% endif %}
-                    </div>
+                            <div class="patient-data-grid">
+                                <div class="patient-data-field">
+                                    <span class="field-label">Age &amp; Gender</span>
+                                    <span class="field-value"><span id="sel-patient-age">--</span> Years &bull; <span id="sel-patient-gender">--</span></span>
+                                </div>
+                                <div class="patient-data-field">
+                                    <span class="field-label">Place / Location</span>
+                                    <span class="field-value" id="sel-patient-place">--</span>
+                                </div>
+                                <div class="patient-data-field">
+                                    <span class="field-label">Contact Number</span>
+                                    <span class="field-value" id="sel-patient-contact">--</span>
+                                </div>
+                                <div class="patient-data-field">
+                                    <span class="field-label">Registration Date</span>
+                                    <span class="field-value" id="sel-patient-registered" style="font-size: 0.88rem;">--</span>
+                                </div>
+                            </div>
 
-                    <div>
-                        <label class="field-label" style="margin-bottom: 0.25rem; display: block;">Clinical Notes (Optional)</label>
-                        <input type="text" id="staff-exam-notes" class="contact-input" placeholder="e.g. Routine diabetic retina screening or blurry vision">
-                    </div>
+                            <!-- Buttons: View Previous Reports & Start New Screening (Requirement 2B) -->
+                            <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem; flex-wrap: wrap;">
+                                <button type="button" class="btn-outline" id="btn-quick-view-reports" style="padding: 0.5rem 1.1rem; font-size: 0.88rem;">
+                                    View Previous Reports
+                                </button>
+                                <button type="button" class="btn-primary-cyan" id="btn-quick-new-screening" style="padding: 0.5rem 1.1rem; font-size: 0.88rem;">
+                                    Start New Screening &darr;
+                                </button>
+                            </div>
+                        </div>
 
-                    <button type="submit" id="btn-start-exam" class="btn-primary-cyan" style="padding: 0.85rem; border-radius: var(--radius-md); justify-content: center; font-size: 1rem;">
-                        Save Patient & Proceed to Fundus Upload &rarr;
-                    </button>
-                </form>
+                        <!-- SECTION: PREVIOUS SCREENING SUMMARY (Requirement 4) -->
+                        <div id="section-previous-summary" style="margin-bottom: 2rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <div>
+                                    <span class="section-tag" style="margin-bottom: 0.2rem;">Longitudinal History</span>
+                                    <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin: 0;">
+                                        Previous Screening Summary
+                                    </h3>
+                                </div>
+                                <span id="summary-records-badge" style="padding: 0.25rem 0.75rem; border-radius: var(--radius-full); font-size: 0.8rem; font-weight: 700; background: rgba(14, 165, 233, 0.1); color: var(--accent-blue);">
+                                    Checking records...
+                                </span>
+                            </div>
 
-                <!-- Search Panel: Existing Patients (Hidden by default) -->
-                <div id="existing-patient-panel" style="display: none; margin-top: 1rem;">
-                    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
-                        <input type="text" id="patient-search-input" class="contact-input" placeholder="Search by name, place, or Patient ID...">
-                        <button type="button" class="btn-outline" id="btn-do-search" style="padding: 0.5rem 1rem;">Search</button>
-                    </div>
+                            <!-- Case 1: No Previous Records Found -->
+                            <div id="box-no-history" style="display: none; background: var(--bg-surface-subtle); border: 1px dashed var(--border-card); border-radius: var(--radius-lg); padding: 2rem 1.5rem; text-align: center;">
+                                <div class="feature-icon-wrapper" style="margin: 0 auto 1rem;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                    </svg>
+                                </div>
+                                <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.35rem;">
+                                    No previous screening records were found for this patient. You can start a new screening.
+                                </h4>
+                                <p style="font-size: 0.88rem; color: var(--text-muted); max-width: 520px; margin: 0 auto 1.5rem;">
+                                    This patient is registered in the clinic database but has not undergone an AI retinal fundus screening session yet.
+                                </p>
+                            </div>
 
-                    <div id="search-results-list" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 0.5rem;">
-                        <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; margin: 1rem 0;">
-                            Type a patient name or ID above to find existing records.
-                        </p>
-                    </div>
+                            <!-- Case 2: Previous Examinations Exist (Show latest first) -->
+                            <div id="box-has-history" style="display: none;">
+                                <!-- Latest Examination Card -->
+                                <div style="background: var(--bg-surface); border: 1px solid var(--border-card); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.75rem; margin-bottom: 1rem;">
+                                        <div style="display: flex; align-items: center; gap: 0.6rem;">
+                                            <span style="font-size: 0.78rem; text-transform: uppercase; color: var(--accent-cyan); font-weight: 700; background: rgba(6, 182, 212, 0.1); padding: 2px 8px; border-radius: var(--radius-full);">
+                                                Latest Examination
+                                            </span>
+                                            <strong style="font-size: 1.05rem; color: var(--text-primary);" id="prev-exam-id">Exam #--</strong>
+                                        </div>
+                                        <span style="font-size: 0.85rem; color: var(--text-muted);" id="prev-exam-date">
+                                            --
+                                        </span>
+                                    </div>
 
-                    <div id="selected-patient-badge" style="display: none; background: rgba(6, 182, 212, 0.08); border: 1px solid var(--border-accent); border-radius: var(--radius-md); padding: 0.75rem 1rem; margin-top: 1rem;">
-                        <span style="font-size: 0.78rem; text-transform: uppercase; color: var(--accent-cyan); font-weight: 700;">Selected Patient:</span>
-                        <div style="font-weight: 700; color: var(--text-primary);" id="selected-patient-text">--</div>
+                                    <div class="patient-data-grid" style="margin-bottom: 1rem;">
+                                        <div class="patient-data-field">
+                                            <span class="field-label">Patient ID</span>
+                                            <span class="field-value" id="prev-patient-id-val">#--</span>
+                                        </div>
+                                        <div class="patient-data-field">
+                                            <span class="field-label">Previous Predicted Disease</span>
+                                            <span class="field-value" style="color: var(--accent-cyan); font-weight: 700;" id="prev-disease">--</span>
+                                        </div>
+                                        <div class="patient-data-field">
+                                            <span class="field-label">AI Confidence Score</span>
+                                            <span class="field-value" style="font-weight: 700;" id="prev-confidence">--%</span>
+                                        </div>
+                                        <div class="patient-data-field">
+                                            <span class="field-label">Examining Doctor</span>
+                                            <span class="field-value" id="prev-doctor-name">--</span>
+                                        </div>
+                                        <div class="patient-data-field" style="grid-column: 1 / -1;">
+                                            <span class="field-label">Previous Examination Notes</span>
+                                            <span class="field-value" id="prev-notes" style="font-style: italic; color: var(--text-secondary);">None recorded</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Visual Previews (Fundus & Grad-CAM) -->
+                                    <div id="prev-images-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+                                        <div style="background: #020617; border-radius: var(--radius-md); padding: 8px; text-align: center;">
+                                            <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 4px; font-weight: 600;">
+                                                Previous Fundus Scan
+                                            </span>
+                                            <img id="prev-fundus-img" src="" alt="Previous Fundus Scan" style="max-height: 140px; border-radius: var(--radius-sm); margin: 0 auto; object-fit: contain;">
+                                            <span id="prev-fundus-placeholder" style="display: none; color: #64748b; font-size: 0.8rem; padding: 2rem 0; display: block;">No image file</span>
+                                        </div>
+                                        <div style="background: #020617; border-radius: var(--radius-md); padding: 8px; text-align: center;">
+                                            <span style="font-size: 0.75rem; color: var(--accent-cyan); text-transform: uppercase; display: block; margin-bottom: 4px; font-weight: 600;">
+                                                Previous Grad-CAM Heatmap
+                                            </span>
+                                            <img id="prev-gradcam-img" src="" alt="Previous Grad-CAM Map" style="max-height: 140px; border-radius: var(--radius-sm); margin: 0 auto; object-fit: contain;">
+                                            <span id="prev-gradcam-placeholder" style="display: none; color: #64748b; font-size: 0.8rem; padding: 2rem 0; display: block;">Heatmap unavailable</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Action Buttons on the latest summary card -->
+                                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                                        <a id="btn-download-prev-pdf" href="#" class="btn-primary-cyan" style="padding: 0.45rem 1rem; font-size: 0.85rem;">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                <polyline points="7 10 12 15 17 10"></polyline>
+                                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                                            </svg>
+                                            Download Previous PDF Report
+                                        </a>
+                                        <button type="button" id="btn-view-prev-full-report" class="btn-outline" style="padding: 0.45rem 1rem; font-size: 0.85rem;">
+                                            View Previous Full Report
+                                        </button>
+                                        <button type="button" id="btn-toggle-all-history" class="btn-outline" style="padding: 0.45rem 1rem; font-size: 0.85rem;">
+                                            View Complete Patient History (<span id="total-history-count">0</span>) &darr;
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Expandable Complete Patient History Table -->
+                                <div id="expandable-history-table" style="display: none; background: var(--bg-surface); border: 1px solid var(--border-card); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1.5rem;">
+                                    <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.75rem;">
+                                        Complete Examination History for Patient <span id="history-patient-tag"></span>
+                                    </h4>
+                                    <div style="overflow-x: auto;">
+                                        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem;">
+                                            <thead>
+                                                <tr style="border-bottom: 2px solid var(--border-subtle); color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem;">
+                                                    <th style="padding: 0.5rem 0.75rem;">Exam #</th>
+                                                    <th style="padding: 0.5rem 0.75rem;">Exam Date</th>
+                                                    <th style="padding: 0.5rem 0.75rem;">Clinician</th>
+                                                    <th style="padding: 0.5rem 0.75rem;">Detected Disease</th>
+                                                    <th style="padding: 0.5rem 0.75rem;">Confidence</th>
+                                                    <th style="padding: 0.5rem 0.75rem;">Notes</th>
+                                                    <th style="padding: 0.5rem 0.75rem;">Report</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="history-table-body">
+                                                <!-- Filled dynamically -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- =========================================================================
+                             NEW SCREENING FOR RETURNING PATIENT (Requirement 5)
+                             ========================================================================= -->
+                        <div class="clinical-card" id="box-returning-screening" style="background: rgba(6, 182, 212, 0.03); border: 1px solid var(--border-accent);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <div>
+                                    <h4 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0;">
+                                        Initiate New Screening for Returning Patient
+                                    </h4>
+                                    <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0.2rem 0 0;">
+                                        Reusing Patient ID <strong style="color: var(--accent-cyan);" id="returning-patient-id-display">#--</strong> &bull; Creates new Examination ID
+                                    </p>
+                                </div>
+                                <span style="padding: 0.25rem 0.75rem; border-radius: var(--radius-full); background: rgba(6, 182, 212, 0.1); color: var(--accent-cyan); font-size: 0.78rem; font-weight: 700;">
+                                    New Session
+                                </span>
+                            </div>
+
+                            <form id="form-returning-patient" style="display: flex; flex-direction: column; gap: 1rem;">
+                                <div>
+                                    <label class="field-label" style="margin-bottom: 0.25rem; display: block;" for="returning-doctor-select">Assign Ophthalmologist *</label>
+                                    <select id="returning-doctor-select" class="contact-input" required>
+                                        <option value="">-- Select Active Doctor --</option>
+                                        {% for doc in doctors %}
+                                        <option value="{{ doc.doctor_id }}">Dr. {{ doc.full_name }} ({{ doc.specialization or "Ophthalmologist" }})</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="field-label" style="margin-bottom: 0.25rem; display: block;" for="returning-exam-notes">Clinical Notes for This Visit (Optional)</label>
+                                    <input type="text" id="returning-exam-notes" class="contact-input" placeholder="e.g. Follow-up checkup after 1 month, symptoms update...">
+                                </div>
+
+                                <button type="submit" id="btn-start-returning-screening" class="btn-primary-cyan" style="padding: 0.85rem; font-size: 1rem; font-weight: 700; justify-content: center;">
+                                    Start New Screening &rarr;
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Quick Recent Activity Panel -->
-            <div class="clinical-card">
-                <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1.25rem;">
-                    Recent Examinations Processed
-                </h3>
+            <!-- Right Column: Recent Activity Queue -->
+            <div>
+                <div class="clinical-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                        <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin: 0;">
+                            Recent Hospital Screenings
+                        </h3>
+                        <span style="padding: 0.2rem 0.65rem; border-radius: var(--radius-full); background: rgba(14, 165, 233, 0.1); color: var(--accent-blue); font-size: 0.78rem; font-weight: 700;">
+                            Live Queue
+                        </span>
+                    </div>
 
-                {% if recent_examinations %}
-                <div style="display: flex; flex-direction: column; gap: 0.85rem; max-height: 480px; overflow-y: auto;">
-                    {% for ex in recent_examinations %}
-                    <div style="padding: 0.85rem; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--bg-surface-subtle);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
-                            <strong style="color: var(--text-primary); font-size: 0.95rem;">{{ ex.patient_name }} ({{ ex.patient_age }}y)</strong>
-                            <span style="font-size: 0.78rem; color: var(--text-muted);">#Exam {{ ex.examination_id }}</span>
-                        </div>
-                        <div style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 0.4rem;">
-                            Assigned: Dr. {{ ex.doctor_name }} &bull; {{ ex.patient_place }}
-                        </div>
-                        {% if ex.detected_disease %}
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.4rem; border-top: 1px solid var(--border-subtle);">
-                            <span style="font-size: 0.82rem; font-weight: 700; color: var(--accent-cyan);">{{ ex.detected_disease }}</span>
-                            <span style="font-size: 0.82rem; color: var(--text-muted);">{{ "%.1f"|format(ex.confidence_score * 100) }}% conf</span>
-                            {% if ex.report_path %}
-                            <a href="/download-report/{{ ex.prediction_id }}" class="btn-outline" style="padding: 0.2rem 0.6rem; font-size: 0.75rem;">
-                                PDF Report
-                            </a>
+                    {% if recent_examinations %}
+                    <div style="display: flex; flex-direction: column; gap: 0.85rem; max-height: 580px; overflow-y: auto; padding-right: 2px;">
+                        {% for ex in recent_examinations %}
+                        <div style="padding: 0.85rem; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--bg-surface-subtle);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                                <strong style="color: var(--text-primary); font-size: 0.95rem;">{{ ex.patient_name }} ({{ ex.patient_age }}y)</strong>
+                                <span style="font-size: 0.78rem; color: var(--text-muted);">#Exam {{ ex.examination_id }}</span>
+                            </div>
+                            <div style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 0.4rem;">
+                                Patient #{{ ex.patient_id }} &bull; Dr. {{ ex.doctor_name }} &bull; {{ ex.patient_place }}
+                            </div>
+                            {% if ex.detected_disease %}
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.4rem; border-top: 1px solid var(--border-subtle);">
+                                <span style="font-size: 0.82rem; font-weight: 700; color: var(--accent-cyan);">{{ ex.detected_disease }}</span>
+                                <span style="font-size: 0.82rem; color: var(--text-muted);">{{ "%.1f"|format(ex.confidence_score * 100) }}% conf</span>
+                                {% if ex.report_path %}
+                                <a href="/download-report/{{ ex.prediction_id }}" class="btn-outline" style="padding: 0.2rem 0.6rem; font-size: 0.75rem;">
+                                    PDF Report
+                                </a>
+                                {% endif %}
+                            </div>
+                            {% else %}
+                            <span style="font-size: 0.78rem; color: var(--color-warning);">Awaiting Image Analysis</span>
                             {% endif %}
                         </div>
-                        {% else %}
-                        <span style="font-size: 0.78rem; color: var(--color-warning);">Awaiting Image Analysis</span>
-                        {% endif %}
+                        {% endfor %}
                     </div>
-                    {% endfor %}
+                    {% else %}
+                    <p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; margin-top: 2rem;">
+                        No examinations processed yet. Register a patient on the left to begin your first screening session.
+                    </p>
+                    {% endif %}
                 </div>
-                {% else %}
-                <p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; margin-top: 2rem;">
-                    No examinations processed yet. Register a patient on the left to begin your first screening session.
-                </p>
-                {% endif %}
             </div>
         </div>
     </main>
 
+    <!-- Modal for Previewing Previous Report -->
+    <div id="report-preview-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 9999; align-items: center; justify-content: center; padding: 1.5rem;">
+        <div style="background: var(--bg-surface); border-radius: var(--radius-lg); max-width: 680px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 1.75rem; border: 1px solid var(--border-card); position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.75rem;">
+                <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin: 0;">
+                    Previous Examination Report Details
+                </h3>
+                <button type="button" id="btn-close-modal" class="btn-outline" style="padding: 0.25rem 0.65rem; font-size: 1rem;">
+                    &times;
+                </button>
+            </div>
+            <div id="modal-content-body">
+                <!-- Filled dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Frontend Script for Staff Workstation -->
     <script>
-        const tabNew = document.getElementById('tab-new-patient');
-        const tabExisting = document.getElementById('tab-existing-patient');
-        const newForm = document.getElementById('new-patient-form');
-        const existingPanel = document.getElementById('existing-patient-panel');
+        // Tab switching: Register vs Search
+        const tabRegister = document.getElementById('btn-tab-register');
+        const tabSearch = document.getElementById('btn-tab-search');
+        const panelRegister = document.getElementById('panel-register-patient');
+        const panelSearch = document.getElementById('panel-search-patient');
 
-        let isExistingMode = false;
-        let selectedExistingPatientId = null;
-
-        tabNew.addEventListener('click', () => {
-            isExistingMode = false;
-            tabNew.className = 'btn-primary-cyan';
-            tabExisting.className = 'btn-outline';
-            newForm.style.display = 'flex';
-            existingPanel.style.display = 'none';
+        tabRegister.addEventListener('click', () => {
+            tabRegister.className = 'btn-primary-cyan';
+            tabSearch.className = 'btn-outline';
+            panelRegister.style.display = 'block';
+            panelSearch.style.display = 'none';
         });
 
-        tabExisting.addEventListener('click', () => {
-            isExistingMode = true;
-            tabExisting.className = 'btn-primary-cyan';
-            tabNew.className = 'btn-outline';
-            existingPanel.style.display = 'block';
+        tabSearch.addEventListener('click', () => {
+            tabSearch.className = 'btn-primary-cyan';
+            tabRegister.className = 'btn-outline';
+            panelSearch.style.display = 'block';
+            panelRegister.style.display = 'none';
         });
 
-        // Search Existing Patients
-        const searchInput = document.getElementById('patient-search-input');
-        const searchBtn = document.getElementById('btn-do-search');
-        const resultsList = document.getElementById('search-results-list');
-        const selectedBadge = document.getElementById('selected-patient-badge');
-        const selectedText = document.getElementById('selected-patient-text');
+        // -------------------------------------------------------------------------
+        // 1. REGISTER NEW PATIENT
+        // -------------------------------------------------------------------------
+        const formRegister = document.getElementById('form-register-patient');
+        const regAlert = document.getElementById('register-alert');
+        const regAlertText = document.getElementById('register-alert-text');
+        const regConfCard = document.getElementById('registration-confirmation-card');
+        const btnSubmitReg = document.getElementById('btn-submit-register');
+        const btnProceedScreening = document.getElementById('btn-proceed-screening');
+        const btnRegisterAnother = document.getElementById('btn-register-another');
 
-        async function performSearch() {
-            const q = searchInput.value.trim();
-            resultsList.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:10px;">Searching...</p>';
+        let newlyCreatedPatient = null;
+        let newlyCreatedDoctorId = null;
+        let newlyCreatedNotes = "";
 
-            try {
-                const res = await fetch(`/staff/search-patients?q=${encodeURIComponent(q)}`);
-                const data = await res.json();
-                if (data.patients && data.patients.length > 0) {
-                    resultsList.innerHTML = data.patients.map(p => `
-                        <div style="padding: 8px 10px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; cursor: pointer;"
-                            onclick="selectPatient(${p.patient_id}, '${p.patient_name.replace(/'/g, "\\'")}', ${p.age}, '${p.place.replace(/'/g, "\\'")}')">
-                            <div>
-                                <strong style="font-size:0.9rem; color:var(--text-primary);">${p.patient_name}</strong>
-                                <span style="font-size:0.8rem; color:var(--text-muted);"> (${p.age}y, ${p.place})</span>
-                            </div>
-                            <button type="button" class="btn-outline" style="padding: 2px 8px; font-size: 0.75rem;">Select</button>
-                        </div>
-                    `).join('');
-                } else {
-                    resultsList.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:10px;">No patients found.</p>';
-                }
-            } catch(e) {
-                resultsList.innerHTML = '<p style="color:var(--color-danger); text-align:center; padding:10px;">Search failed.</p>';
-            }
-        }
-
-        searchBtn.addEventListener('click', performSearch);
-        searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') performSearch(); });
-
-        window.selectPatient = function(id, name, age, place) {
-            selectedExistingPatientId = id;
-            selectedText.textContent = `#${id} — ${name} (${age} Years, ${place})`;
-            selectedBadge.style.display = 'block';
-
-            // Auto-switch back to form and prefill doctor selection
-            newForm.style.display = 'flex';
-            document.getElementById('staff-patient-name').value = name;
-            document.getElementById('staff-patient-name').disabled = true;
-            document.getElementById('staff-patient-age').value = age;
-            document.getElementById('staff-patient-age').disabled = true;
-            document.getElementById('staff-patient-place').value = place;
-            document.getElementById('staff-patient-place').disabled = true;
-            document.getElementById('btn-start-exam').textContent = 'Initiate Examination with Selected Patient &rarr;';
-        };
-
-        // Form Submission
-        newForm.addEventListener('submit', async (e) => {
+        formRegister.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const doctorId = document.getElementById('staff-doctor-select').value;
-            const notes = document.getElementById('staff-exam-notes').value.trim();
+            regAlert.style.display = 'none';
 
-            if (!doctorId) {
-                alert("Please select an examining doctor.");
+            const name = document.getElementById('reg-patient-name').value.trim();
+            const age = document.getElementById('reg-patient-age').value.trim();
+            const gender = document.getElementById('reg-patient-gender').value;
+            const contact = document.getElementById('reg-patient-contact').value.trim();
+            const place = document.getElementById('reg-patient-place').value.trim();
+            const doctorId = document.getElementById('reg-doctor-select').value;
+            const notes = document.getElementById('reg-exam-notes').value.trim();
+
+            if (!name || !age || !place || !contact) {
+                regAlertText.textContent = "Please fill in all required demographic details.";
+                regAlert.style.display = 'flex';
                 return;
             }
 
-            let patientId = selectedExistingPatientId;
-
-            // If new patient, register first
-            if (!patientId) {
-                const pName = document.getElementById('staff-patient-name').value.trim();
-                const pAge = document.getElementById('staff-patient-age').value.trim();
-                const pPlace = document.getElementById('staff-patient-place').value.trim();
-
-                try {
-                    const regRes = await fetch('/register-patient', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({patient_name: pName, age: pAge, place: pPlace})
-                    });
-                    const regData = await regRes.json();
-                    if (!regRes.ok || !regData.success) {
-                        alert(regData.error || "Failed to register patient.");
-                        return;
-                    }
-                    patientId = regData.patient_id;
-                } catch(err) {
-                    alert("Network error creating patient record.");
-                    return;
-                }
+            if (!doctorId) {
+                regAlertText.textContent = "Please select an assigned ophthalmologist for screening.";
+                regAlert.style.display = 'flex';
+                return;
             }
 
-            // Create Examination
+            // Validate contact number format
+            const phoneRegex = /^\+?[0-9\s\-()]{7,20}$/;
+            if (!phoneRegex.test(contact)) {
+                regAlertText.textContent = "Invalid contact number format. Please provide a valid phone number (e.g. +1-555-0199 or 9876543210).";
+                regAlert.style.display = 'flex';
+                return;
+            }
+
+            btnSubmitReg.disabled = true;
+            btnSubmitReg.textContent = "Saving to Database...";
+
             try {
-                const examRes = await fetch('/staff/create-examination', {
+                const resp = await fetch('/register-patient', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        patient_id: patientId,
+                        patient_name: name,
+                        age: age,
+                        gender: gender,
+                        contact_number: contact,
+                        place: place
+                    })
+                });
+
+                const data = await resp.json();
+
+                if (!resp.ok || !data.success) {
+                    regAlertText.textContent = data.error || "Failed to register patient.";
+                    regAlert.style.display = 'flex';
+                    btnSubmitReg.disabled = false;
+                    btnSubmitReg.textContent = "Register Patient & Continue \u2192";
+                    return;
+                }
+
+                newlyCreatedPatient = data.patient;
+                newlyCreatedDoctorId = doctorId;
+                newlyCreatedNotes = notes;
+
+                // Display confirmation card
+                formRegister.style.display = 'none';
+                regConfCard.style.display = 'block';
+
+                document.getElementById('conf-patient-id').textContent = `#${data.patient.patient_id}`;
+                document.getElementById('conf-patient-name').textContent = data.patient.patient_name;
+                document.getElementById('conf-patient-age').textContent = data.patient.age;
+                document.getElementById('conf-patient-gender').textContent = data.patient.gender || 'Not specified';
+                document.getElementById('conf-patient-contact').textContent = data.patient.contact_number || 'N/A';
+                document.getElementById('conf-patient-place').textContent = data.patient.place;
+
+                const docSelect = document.getElementById('reg-doctor-select');
+                const docText = docSelect.options[docSelect.selectedIndex].text;
+                document.getElementById('conf-doctor-name').textContent = docText;
+                document.getElementById('conf-exam-notes').textContent = notes || "None recorded";
+
+                // Save to session storage for seamless screening flow
+                sessionStorage.setItem("visionx_patient", JSON.stringify(data.patient));
+
+            } catch (err) {
+                regAlertText.textContent = "Network error registering patient. Please check backend connection.";
+                regAlert.style.display = 'flex';
+                btnSubmitReg.disabled = false;
+                btnSubmitReg.textContent = "Register Patient & Continue \u2192";
+            }
+        });
+
+        // Proceed to Eye Screening from confirmation card
+        btnProceedScreening.addEventListener('click', async () => {
+            if (!newlyCreatedPatient || !newlyCreatedDoctorId) return;
+
+            btnProceedScreening.disabled = true;
+            btnProceedScreening.textContent = "Initializing Examination...";
+
+            try {
+                const examResp = await fetch('/staff/create-examination', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        patient_id: newlyCreatedPatient.patient_id,
+                        doctor_id: newlyCreatedDoctorId,
+                        notes: newlyCreatedNotes
+                    })
+                });
+
+                const examData = await examResp.json();
+                if (!examResp.ok || !examData.success) {
+                    alert(examData.error || "Failed to create examination session.");
+                    btnProceedScreening.disabled = false;
+                    btnProceedScreening.textContent = "Proceed to Eye Screening \u2192";
+                    return;
+                }
+
+                window.location.href = examData.next_url;
+            } catch (err) {
+                alert("Network error initializing examination.");
+                btnProceedScreening.disabled = false;
+                btnProceedScreening.textContent = "Proceed to Eye Screening \u2192";
+            }
+        });
+
+        btnRegisterAnother.addEventListener('click', () => {
+            formRegister.reset();
+            formRegister.style.display = 'flex';
+            regConfCard.style.display = 'none';
+            btnSubmitReg.disabled = false;
+            btnSubmitReg.textContent = "Register Patient & Continue \u2192";
+        });
+
+        // -------------------------------------------------------------------------
+        // 2. SEARCH EXISTING PATIENT & DISPLAY PREVIOUS REPORT SUMMARY
+        // -------------------------------------------------------------------------
+        const searchInput = document.getElementById('patient-search-input');
+        const btnDoSearch = document.getElementById('btn-do-search');
+        const searchAlert = document.getElementById('search-alert-banner');
+        const searchAlertText = document.getElementById('search-alert-text');
+        const searchResultsCont = document.getElementById('search-results-container');
+        const searchResultsList = document.getElementById('search-results-list');
+        const resultsCountLabel = document.getElementById('results-count-label');
+        const selectedPatientView = document.getElementById('selected-patient-view');
+
+        let activeSelectedPatientId = null;
+        let latestPatientExam = null;
+
+        async function executePatientSearch() {
+            const query = searchInput.value.trim();
+            searchAlert.style.display = 'none';
+
+            if (!query) {
+                searchAlertText.textContent = "Please enter a Unique Patient ID or Patient Name to search.";
+                searchAlert.style.display = 'flex';
+                return;
+            }
+
+            btnDoSearch.disabled = true;
+            btnDoSearch.textContent = "Searching...";
+
+            try {
+                const resp = await fetch(`/staff/search-patients?q=${encodeURIComponent(query)}`);
+                const data = await resp.json();
+
+                btnDoSearch.disabled = false;
+                btnDoSearch.textContent = "Search Patient";
+
+                if (!data.success || !data.patients || data.patients.length === 0) {
+                    searchResultsCont.style.display = 'none';
+                    searchAlert.className = "alert-banner warning";
+                    searchAlertText.innerHTML = `No patient records found matching "<strong>${query}</strong>". Please verify the Patient ID/Name or <a href="#" onclick="document.getElementById('btn-tab-register').click(); return false;" style="color:var(--accent-cyan); text-decoration:underline;">register a new patient</a>.`;
+                    searchAlert.style.display = 'flex';
+                    return;
+                }
+
+                searchResultsCont.style.display = 'block';
+
+                // Notice if multiple patients with same or similar name
+                if (data.patients.length > 1) {
+                    searchAlert.className = "alert-banner info";
+                    searchAlertText.textContent = `Multiple matching patients found (${data.patients.length} records). Please verify the Unique Patient ID before proceeding.`;
+                    searchAlert.style.display = 'flex';
+                }
+
+                resultsCountLabel.textContent = `Found ${data.patients.length} matching patient record(s):`;
+
+                searchResultsList.innerHTML = data.patients.map(p => `
+                    <div style="padding: 0.75rem 1rem; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--bg-surface); display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease;">
+                        <div>
+                            <div style="display: flex; align-items: baseline; gap: 0.5rem;">
+                                <strong style="color: var(--accent-cyan); font-size: 0.95rem;">#${p.patient_id}</strong>
+                                <strong style="color: var(--text-primary); font-size: 1rem;">${p.patient_name}</strong>
+                                <span style="font-size: 0.82rem; color: var(--text-muted);">(${p.age}y &bull; ${p.gender || 'Unspecified'})</span>
+                            </div>
+                            <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 2px;">
+                                Place: <strong>${p.place}</strong> ${p.contact_number ? '&bull; Tel: <strong>' + p.contact_number + '</strong>' : ''}
+                            </div>
+                        </div>
+                        <button type="button" class="btn-primary-cyan" style="padding: 0.35rem 0.95rem; font-size: 0.82rem;" onclick="loadPatientSummary(${p.patient_id})">
+                            Select Patient &rarr;
+                        </button>
+                    </div>
+                `).join('');
+
+            } catch (err) {
+                btnDoSearch.disabled = false;
+                btnDoSearch.textContent = "Search Patient";
+                searchAlert.className = "alert-banner error";
+                searchAlertText.textContent = "Network error searching patients.";
+                searchAlert.style.display = 'flex';
+            }
+        }
+
+        btnDoSearch.addEventListener('click', executePatientSearch);
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                executePatientSearch();
+            }
+        });
+
+        // -------------------------------------------------------------------------
+        // 3. LOAD PATIENT SUMMARY & PREVIOUS SCREENING (Requirement 4)
+        // -------------------------------------------------------------------------
+        window.loadPatientSummary = async function(patientId) {
+            activeSelectedPatientId = patientId;
+            selectedPatientView.style.display = 'block';
+
+            // Scroll smoothly into view
+            selectedPatientView.scrollIntoView({ behavior: 'smooth' });
+
+            const summaryBadge = document.getElementById('summary-records-badge');
+            summaryBadge.textContent = "Retrieving longitudinal history...";
+
+            try {
+                const resp = await fetch(`/staff/patient/${patientId}/summary`);
+                const data = await resp.json();
+
+                if (!resp.ok || !data.success) {
+                    alert(data.error || "Could not retrieve patient summary.");
+                    return;
+                }
+
+                const patient = data.patient;
+                sessionStorage.setItem("visionx_patient", JSON.stringify(patient));
+
+                // Populate Demographics
+                document.getElementById('sel-patient-id').textContent = `#${patient.patient_id}`;
+                document.getElementById('sel-patient-name').textContent = patient.patient_name;
+                document.getElementById('sel-patient-age').textContent = patient.age;
+                document.getElementById('sel-patient-gender').textContent = patient.gender || 'Not specified';
+                document.getElementById('sel-patient-place').textContent = patient.place;
+                document.getElementById('sel-patient-contact').textContent = patient.contact_number || 'N/A';
+                document.getElementById('sel-patient-registered').textContent = patient.created_at || 'Registered';
+
+                document.getElementById('returning-patient-id-display').textContent = `#${patient.patient_id}`;
+
+                // Handle Previous Screening Summary
+                const boxNoHistory = document.getElementById('box-no-history');
+                const boxHasHistory = document.getElementById('box-has-history');
+                const expandableHistory = document.getElementById('expandable-history-table');
+                expandableHistory.style.display = 'none';
+
+                if (!data.has_history || !data.latest_examination) {
+                    summaryBadge.textContent = "0 Previous Visits";
+                    summaryBadge.style.background = "rgba(100, 116, 139, 0.1)";
+                    summaryBadge.style.color = "var(--text-muted)";
+                    boxNoHistory.style.display = 'block';
+                    boxHasHistory.style.display = 'none';
+                    latestPatientExam = null;
+                } else {
+                    summaryBadge.textContent = `${data.total_examinations} Recorded Examination(s)`;
+                    summaryBadge.style.background = "rgba(16, 185, 129, 0.1)";
+                    summaryBadge.style.color = "var(--color-success)";
+                    boxNoHistory.style.display = 'none';
+                    boxHasHistory.style.display = 'block';
+
+                    const latest = data.latest_examination;
+                    latestPatientExam = latest;
+
+                    document.getElementById('prev-exam-id').textContent = `Exam #${latest.examination_id}`;
+                    document.getElementById('prev-exam-date').textContent = latest.examined_at_str;
+                    document.getElementById('prev-patient-id-val').textContent = `#${patient.patient_id}`;
+                    document.getElementById('prev-disease').textContent = latest.detected_disease || "Scan Pending";
+                    document.getElementById('prev-confidence').textContent = latest.confidence_percent !== null ? `${latest.confidence_percent}%` : "—";
+                    document.getElementById('prev-doctor-name').textContent = `Dr. ${latest.doctor_name || "Assigned Specialist"}`;
+                    document.getElementById('prev-notes').textContent = latest.notes || "No clinical notes recorded";
+
+                    // Previews
+                    const fundusImg = document.getElementById('prev-fundus-img');
+                    const fundusPh = document.getElementById('prev-fundus-placeholder');
+                    if (latest.image_path) {
+                        fundusImg.src = `/${latest.image_path.replace(/\\/g, '/')}`;
+                        fundusImg.style.display = 'block';
+                        fundusPh.style.display = 'none';
+                    } else {
+                        fundusImg.style.display = 'none';
+                        fundusPh.style.display = 'block';
+                    }
+
+                    const gradcamImg = document.getElementById('prev-gradcam-img');
+                    const gradcamPh = document.getElementById('prev-gradcam-placeholder');
+                    if (latest.heatmap_url) {
+                        gradcamImg.src = `/generated/${encodeURIComponent(latest.heatmap_url)}`;
+                        gradcamImg.style.display = 'block';
+                        gradcamPh.style.display = 'none';
+                    } else {
+                        gradcamImg.style.display = 'none';
+                        gradcamPh.style.display = 'block';
+                    }
+
+                    // PDF Download Button
+                    const downloadBtn = document.getElementById('btn-download-prev-pdf');
+                    if (latest.prediction_id) {
+                        downloadBtn.href = `/download-report/${latest.prediction_id}`;
+                        downloadBtn.style.display = 'inline-flex';
+                    } else {
+                        downloadBtn.style.display = 'none';
+                    }
+
+                    // Populate complete history table
+                    document.getElementById('total-history-count').textContent = data.history.length;
+                    document.getElementById('history-patient-tag').textContent = `#${patient.patient_id} (${patient.patient_name})`;
+
+                    const tableBody = document.getElementById('history-table-body');
+                    tableBody.innerHTML = data.history.map(h => `
+                        <tr style="border-bottom: 1px solid var(--border-subtle);">
+                            <td style="padding: 0.65rem 0.75rem; font-weight: 700;">#${h.examination_id}</td>
+                            <td style="padding: 0.65rem 0.75rem; color: var(--text-muted); font-size: 0.82rem;">${h.examined_at_str}</td>
+                            <td style="padding: 0.65rem 0.75rem;">Dr. ${h.doctor_name || 'Clinician'}</td>
+                            <td style="padding: 0.65rem 0.75rem; font-weight: 700; color: var(--accent-cyan);">${h.detected_disease || 'Pending'}</td>
+                            <td style="padding: 0.65rem 0.75rem;">${h.confidence_percent !== null ? h.confidence_percent + '%' : '—'}</td>
+                            <td style="padding: 0.65rem 0.75rem; font-size: 0.8rem; color: var(--text-secondary); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${h.notes || '—'}</td>
+                            <td style="padding: 0.65rem 0.75rem;">
+                                ${h.prediction_id ? `<a href="/download-report/${h.prediction_id}" class="btn-outline" style="padding: 0.15rem 0.55rem; font-size: 0.75rem;">PDF</a>` : '—'}
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+
+            } catch (err) {
+                alert("Failed to load patient longitudinal summary.");
+            }
+        };
+
+        // Toggle complete history table
+        const btnToggleHistory = document.getElementById('btn-toggle-all-history');
+        const expandableHistory = document.getElementById('expandable-history-table');
+        if (btnToggleHistory) {
+            btnToggleHistory.addEventListener('click', () => {
+                expandableHistory.style.display = expandableHistory.style.display === 'none' ? 'block' : 'none';
+            });
+        }
+
+        // Quick button to scroll to new screening
+        const btnQuickNewScreening = document.getElementById('btn-quick-new-screening');
+        if (btnQuickNewScreening) {
+            btnQuickNewScreening.addEventListener('click', () => {
+                document.getElementById('box-returning-screening').scrollIntoView({ behavior: 'smooth' });
+            });
+        }
+
+        const btnQuickViewReports = document.getElementById('btn-quick-view-reports');
+        if (btnQuickViewReports) {
+            btnQuickViewReports.addEventListener('click', () => {
+                document.getElementById('section-previous-summary').scrollIntoView({ behavior: 'smooth' });
+            });
+        }
+
+        // Modal full report view
+        const modal = document.getElementById('report-preview-modal');
+        const btnCloseModal = document.getElementById('btn-close-modal');
+        const btnViewPrevFull = document.getElementById('btn-view-prev-full-report');
+        const modalBody = document.getElementById('modal-content-body');
+
+        if (btnViewPrevFull) {
+            btnViewPrevFull.addEventListener('click', () => {
+                if (!latestPatientExam) return;
+                modalBody.innerHTML = `
+                    <div style="margin-bottom: 1rem;">
+                        <h4 style="color: var(--accent-cyan); margin: 0 0 0.5rem;">Previous Screening Case #${latestPatientExam.examination_id}</h4>
+                        <div style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem;">Examined on ${latestPatientExam.examined_at_str} by Dr. ${latestPatientExam.doctor_name}</div>
+                        <div style="background: var(--bg-surface-subtle); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1rem;">
+                            <div><strong>Predicted Condition:</strong> <span style="color: var(--accent-cyan); font-weight: 700;">${latestPatientExam.detected_disease || 'N/A'}</span></div>
+                            <div><strong>AI Confidence:</strong> <span>${latestPatientExam.confidence_percent !== null ? latestPatientExam.confidence_percent + '%' : 'N/A'}</span></div>
+                            <div><strong>Clinical Notes:</strong> <span>${latestPatientExam.notes || 'None recorded'}</span></div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; text-align: center; margin-bottom: 1.5rem;">
+                            <div>
+                                <strong style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Original Scan</strong>
+                                ${latestPatientExam.image_path ? `<img src="/${latestPatientExam.image_path.replace(/\\/g, '/')}" style="max-height: 180px; max-width: 100%; border-radius: 6px; border: 1px solid var(--border-card);">` : '<p style="color:var(--text-muted);">No image</p>'}
+                            </div>
+                            <div>
+                                <strong style="font-size: 0.8rem; text-transform: uppercase; color: var(--accent-cyan); display: block; margin-bottom: 4px;">Grad-CAM Heatmap</strong>
+                                ${latestPatientExam.heatmap_url ? `<img src="/generated/${encodeURIComponent(latestPatientExam.heatmap_url)}" style="max-height: 180px; max-width: 100%; border-radius: 6px; border: 1px solid var(--border-card);">` : '<p style="color:var(--text-muted);">No heatmap</p>'}
+                            </div>
+                        </div>
+                        ${latestPatientExam.prediction_id ? `<a href="/download-report/${latestPatientExam.prediction_id}" class="btn-primary-cyan" style="display: block; text-align: center; padding: 0.65rem;">Download Official Signed PDF Report</a>` : ''}
+                    </div>
+                `;
+                modal.style.display = 'flex';
+            });
+        }
+
+        if (btnCloseModal) {
+            btnCloseModal.addEventListener('click', () => { modal.style.display = 'none'; });
+        }
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) modal.style.display = 'none';
+        });
+
+        // -------------------------------------------------------------------------
+        // 4. INITIATE NEW SCREENING FOR RETURNING PATIENT (Requirement 5)
+        // -------------------------------------------------------------------------
+        const formReturning = document.getElementById('form-returning-patient');
+        const btnStartReturning = document.getElementById('btn-start-returning-screening');
+
+        formReturning.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!activeSelectedPatientId) {
+                alert("Please select a patient first.");
+                return;
+            }
+
+            const doctorId = document.getElementById('returning-doctor-select').value;
+            const notes = document.getElementById('returning-exam-notes').value.trim();
+
+            if (!doctorId) {
+                alert("Please select an examining ophthalmologist.");
+                return;
+            }
+
+            btnStartReturning.disabled = true;
+            btnStartReturning.textContent = "Creating New Examination Session...";
+
+            try {
+                const resp = await fetch('/staff/create-examination', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        patient_id: activeSelectedPatientId,
                         doctor_id: doctorId,
                         notes: notes
                     })
                 });
-                const examData = await examRes.json();
-                if (!examRes.ok || !examData.success) {
-                    alert(examData.error || "Failed to initialize examination.");
+
+                const data = await resp.json();
+
+                if (!resp.ok || !data.success) {
+                    alert(data.error || "Failed to initialize examination.");
+                    btnStartReturning.disabled = false;
+                    btnStartReturning.textContent = "Start New Screening \u2192";
                     return;
                 }
 
-                // Redirect to Fundus Upload Page with Patient and Examination ID
-                window.location.href = examData.next_url;
-            } catch(err) {
+                // Redirect to upload page reusing existing patient ID with brand new examination ID
+                window.location.href = data.next_url;
+
+            } catch (err) {
                 alert("Network error initializing examination.");
+                btnStartReturning.disabled = false;
+                btnStartReturning.textContent = "Start New Screening \u2192";
             }
         });
+
+        // Support direct patient selection from URL parameter if navigated from results page
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlPatientId = urlParams.get('patient_id');
+        if (urlPatientId) {
+            tabSearch.click();
+            searchInput.value = urlPatientId;
+            loadPatientSummary(parseInt(urlPatientId, 10));
+        }
     </script>
 </body>
+
 </html>
