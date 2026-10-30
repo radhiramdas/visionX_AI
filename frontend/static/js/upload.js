@@ -50,7 +50,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function showError(message) {
-        if (errorBanner) errorBanner.style.display = "block";
+        if (errorBanner) {
+            errorBanner.style.display = "flex";
+            errorBanner.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
         if (errorMessage) errorMessage.textContent = message;
     }
 

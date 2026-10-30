@@ -108,13 +108,16 @@
             </div>
 
             <!-- Error Banner -->
-            <div id="error-banner" class="alert-banner error" style="display: none;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <div id="error-banner" class="alert-banner error" style="display: none; align-items: flex-start; gap: 0.75rem; padding: 1rem 1.25rem;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" style="flex-shrink: 0; margin-top: 2px;">
                     <circle cx="12" cy="12" r="10"></circle>
                     <line x1="12" y1="8" x2="12" y2="12"></line>
                     <line x1="12" y1="16" x2="12.01" y2="16"></line>
                 </svg>
-                <span id="error-message"></span>
+                <div style="flex: 1;">
+                    <strong style="display: block; font-size: 0.95rem; margin-bottom: 2px; color: #fecaca;">Image Validation Notice</strong>
+                    <span id="error-message" style="line-height: 1.45; font-size: 0.9rem;"></span>
+                </div>
             </div>
 
             <!-- Form Upload -->

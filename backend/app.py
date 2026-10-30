@@ -46,7 +46,7 @@ os.makedirs(REPORT_DIR, exist_ok=True)
 # --------------------------------------------------
 
 from model_loader import load_model, get_model
-from prediction import predict_with_details
+from prediction import predict_with_details, validate_fundus_image
 from gradcam import generate_gradcam, DEFAULT_GENERATED_DIR
 
 from db_operations import (
@@ -820,6 +820,14 @@ def handle_predict():
     except Exception:
         return jsonify({"success": False, "error": "The uploaded file is not a valid image."}), 400
 
+    # 5b. Validate whether image is a genuine retinal fundus photograph
+    is_valid, validation_msg = validate_fundus_image(image)
+    if not is_valid:
+        return jsonify({
+            "success": False,
+            "error": f"Invalid Image: {validation_msg}"
+        }), 400
+
     # 6. Load model
     try:
         model, device = get_model()
@@ -836,6 +844,8 @@ def handle_predict():
             input_tensor,
             rgb_image,
         ) = predict_with_details(image, model=model, device=device)
+    except ValueError as val_err:
+        return jsonify({"success": False, "error": f"Invalid Image: {str(val_err)}"}), 400
     except Exception as error:
         app.logger.exception("Prediction failed: %s", error)
         return jsonify({"success": False, "error": "Prediction failed. Please try another image."}), 500
