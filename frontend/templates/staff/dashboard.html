@@ -48,12 +48,12 @@
             </p>
         </div>
 
-        <!-- Main Layout: 2 Columns -->
-        <div style="display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 2rem; margin-bottom: 3rem;">
+        <!-- Main Layout: 2 Columns (Responsive Workstation Grid) -->
+        <div class="staff-workstation-grid">
             <!-- Left Column: Patient Intake Workstation -->
             <div>
                 <!-- Primary Action Switcher (Register New vs Search Existing) -->
-                <div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem;">
+                <div class="intake-tab-switcher" style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem;">
                     <button type="button" class="btn-primary-cyan" id="btn-tab-register" style="padding: 0.65rem 1.4rem; font-size: 0.95rem; font-weight: 600;">
                         + Register a New Patient
                     </button>
@@ -87,7 +87,7 @@
 
                     <!-- Patient Registration Form -->
                     <form id="form-register-patient" style="display: flex; flex-direction: column; gap: 1rem;">
-                        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1rem;">
+                        <div class="form-row-3col">
                             <div>
                                 <label class="field-label" style="margin-bottom: 0.25rem; display: block;" for="reg-patient-name">Full Name *</label>
                                 <input type="text" id="reg-patient-name" class="contact-input" placeholder="e.g. Eleanor Vance" required autocomplete="name">
@@ -107,7 +107,7 @@
                             </div>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-row-2col">
                             <div>
                                 <label class="field-label" style="margin-bottom: 0.25rem; display: block;" for="reg-patient-contact">Contact Number *</label>
                                 <input type="tel" id="reg-patient-contact" class="contact-input" placeholder="e.g. +1-555-0199 or 9876543210" required>
@@ -363,7 +363,7 @@
                                     </div>
 
                                     <!-- Visual Previews (Fundus & Grad-CAM) -->
-                                    <div id="prev-images-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+                                    <div id="prev-images-row" class="form-row-2col" style="margin-bottom: 1.25rem;">
                                         <div style="background: #020617; border-radius: var(--radius-md); padding: 8px; text-align: center;">
                                             <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 4px; font-weight: 600;">
                                                 Previous Fundus Scan
@@ -958,7 +958,7 @@
                             <div><strong>AI Confidence:</strong> <span>${latestPatientExam.confidence_percent !== null ? latestPatientExam.confidence_percent + '%' : 'N/A'}</span></div>
                             <div><strong>Clinical Notes:</strong> <span>${latestPatientExam.notes || 'None recorded'}</span></div>
                         </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; text-align: center; margin-bottom: 1.5rem;">
+                        <div class="form-row-2col" style="text-align: center; margin-bottom: 1.5rem;">
                             <div>
                                 <strong style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Original Scan</strong>
                                 ${latestPatientExam.image_path ? `<img src="/${latestPatientExam.image_path.replace(/\\/g, '/')}" style="max-height: 180px; max-width: 100%; border-radius: 6px; border: 1px solid var(--border-card);">` : '<p style="color:var(--text-muted);">No image</p>'}

@@ -803,6 +803,30 @@
             });
         }
 
+        // Mobile Navigation Drawer Toggle
+        const mobileToggle = document.getElementById('mobile-toggle');
+        const navMenu = document.getElementById('nav-menu');
+        if (mobileToggle && navMenu) {
+            mobileToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                navMenu.classList.toggle('open');
+                const isOpen = navMenu.classList.contains('open');
+                mobileToggle.setAttribute('aria-expanded', isOpen);
+            });
+            navMenu.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    navMenu.classList.remove('open');
+                    mobileToggle.setAttribute('aria-expanded', 'false');
+                });
+            });
+            document.addEventListener('click', (e) => {
+                if (!navMenu.contains(e.target) && !mobileToggle.contains(e.target)) {
+                    navMenu.classList.remove('open');
+                    mobileToggle.setAttribute('aria-expanded', 'false');
+                }
+            });
+        }
+
         // Handle login form submission with authentic backend verification
         if (authForm) {
             authForm.addEventListener('submit', async (e) => {

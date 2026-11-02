@@ -1516,18 +1516,130 @@ textarea.contact-input {
 }
 
 /* ==========================================================================
-   Responsive Adaptations
+   Responsive Web Design Standards & Layout Utilities
    ========================================================================== */
 
+/* Universal Responsive Layout Utilities */
+.staff-workstation-grid {
+    display: grid;
+    grid-template-columns: 1.25fr 0.75fr;
+    gap: 2rem;
+    margin-bottom: 3rem;
+    width: 100%;
+}
+
+.form-row-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    width: 100%;
+}
+
+.form-row-3col {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 1rem;
+    width: 100%;
+}
+
+.admin-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2.5rem;
+    width: 100%;
+}
+
+.admin-forms-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+    width: 100%;
+}
+
+.search-input-group {
+    display: flex;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.intake-tab-switcher {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+/* Touch-friendly Table Container */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+}
+
+.table-responsive table,
+[style*="overflow-x: auto"] table {
+    width: 100%;
+    min-width: 620px;
+    border-collapse: collapse;
+}
+
+[style*="overflow-x: auto"] {
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Prevent unwanted horizontal document blowout */
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+}
+
+img, svg, video {
+    max-width: 100%;
+    height: auto;
+}
+
+/* ==========================================================================
+   Responsive Breakpoints
+   ========================================================================== */
+
+/* Large Tablets & Small Laptops (max-width: 1024px) */
 @media (max-width: 1024px) {
+    .staff-workstation-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
     .hero-content-grid {
         grid-template-columns: 1fr;
-        gap: 3rem;
+        gap: 2.5rem;
+    }
+
+    .hero-presentation {
+        text-align: center;
+        max-width: 680px;
+        margin: 0 auto;
+    }
+
+    .hero-action-buttons {
+        justify-content: center;
+    }
+
+    .hero-stats-row {
+        justify-content: center;
     }
 
     .auth-glass-card {
         margin: 0 auto;
         max-width: 520px;
+        width: 100%;
     }
 
     .steps-container {
@@ -1541,27 +1653,135 @@ textarea.contact-input {
     .footer-top-grid {
         grid-template-columns: 1fr 1fr;
     }
+
+    .form-row-3col {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .diseases-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
 }
 
+/* Tablets Portrait & Large Smartphones (max-width: 768px) */
 @media (max-width: 768px) {
-    .nav-links, .nav-actions .btn-outline {
+    /* Mobile Navigation Drawer */
+    .nav-links {
+        display: none;
+        position: absolute;
+        top: var(--nav-height);
+        left: 0;
+        right: 0;
+        width: 100%;
+        background: #ffffff;
+        flex-direction: column;
+        padding: 1.5rem 1.75rem;
+        gap: 1.15rem;
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.18);
+        border-bottom: 1px solid var(--border-subtle);
+        z-index: 999;
+    }
+
+    [data-theme="dark"] .nav-links {
+        background: #0b111e;
+        border-bottom-color: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65);
+    }
+
+    .nav-links.open {
+        display: flex;
+        animation: mobileNavSlideDown 0.25s ease-out forwards;
+    }
+
+    @keyframes mobileNavSlideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-8px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .nav-links a {
+        font-size: 1.05rem;
+        font-weight: 600;
+        padding: 0.35rem 0;
+        display: block;
+        width: 100%;
+    }
+
+    .nav-actions .btn-outline {
         display: none;
     }
 
     .mobile-menu-btn {
-        display: block;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
+    /* Container Spacing */
+    .nav-container {
+        padding: 0 1.25rem;
+    }
+
+    .page-container {
+        padding: 1.5rem 1rem;
+    }
+
+    .clinical-card {
+        padding: 1.25rem 1rem;
+        border-radius: var(--radius-md);
+    }
+
+    /* Hero Typography */
     .hero-main-title {
-        font-size: 2.35rem;
+        font-size: 2.15rem;
+        line-height: 1.2;
+    }
+
+    .hero-subtitle-tag {
+        font-size: 1.05rem;
+    }
+
+    /* Responsive Form Rows */
+    .form-row-2col {
+        grid-template-columns: 1fr;
+        gap: 0.85rem;
+    }
+
+    .form-row-3col {
+        grid-template-columns: 1fr;
+        gap: 0.85rem;
+    }
+
+    /* Diagnostic Results & Evidence Grids */
+    .results-metrics-grid, 
+    .comparison-grid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
     }
 
     .steps-container {
         grid-template-columns: 1fr;
     }
 
-    .results-metrics-grid, .comparison-grid {
+    /* Administrative Grids */
+    .admin-stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.85rem;
+    }
+
+    .admin-forms-grid {
         grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .patient-data-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
     }
 
     .footer-top-grid {
@@ -1572,5 +1792,128 @@ textarea.contact-input {
         flex-direction: column;
         gap: 1rem;
         text-align: center;
+    }
+
+    .search-input-group {
+        flex-direction: column;
+    }
+
+    .search-input-group button {
+        width: 100%;
+    }
+
+    .intake-tab-switcher button {
+        flex: 1 1 calc(50% - 0.5rem);
+    }
+}
+
+/* Small Smartphones (max-width: 480px) */
+@media (max-width: 480px) {
+    .nav-container {
+        padding: 0 0.85rem;
+    }
+
+    .brand-title {
+        font-size: 1.15rem;
+    }
+
+    .brand-icon {
+        width: 32px;
+        height: 32px;
+    }
+
+    .brand-icon svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .page-container {
+        padding: 1.25rem 0.75rem;
+    }
+
+    .clinical-card {
+        padding: 1rem 0.75rem;
+    }
+
+    .hero-main-title {
+        font-size: 1.85rem;
+    }
+
+    .hero-action-buttons {
+        flex-direction: column;
+        width: 100%;
+        gap: 0.75rem;
+    }
+
+    .hero-action-buttons a {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .hero-stats-row {
+        gap: 0.75rem;
+    }
+
+    .stat-item {
+        padding: 0.4rem 0.6rem;
+    }
+
+    .stat-number {
+        font-size: 1.35rem;
+    }
+
+    .patient-data-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .intake-tab-switcher {
+        flex-direction: column;
+    }
+
+    .intake-tab-switcher button {
+        width: 100%;
+    }
+
+    .role-selector-grid, .auth-role-tabs {
+        gap: 0.35rem;
+    }
+
+    .role-btn, .role-tab-btn {
+        padding: 0.55rem 0.35rem;
+        font-size: 0.78rem;
+    }
+
+    .role-btn svg, .role-tab-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .image-display-frame {
+        height: 240px;
+        padding: 6px;
+    }
+
+    .retinal-dropzone {
+        padding: 1.5rem 0.85rem;
+        min-height: 160px;
+    }
+
+    .section-title {
+        font-size: 1.45rem;
+    }
+
+    .metric-large-value {
+        font-size: 1.75rem;
+    }
+
+    .patient-badge-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
     }
 }

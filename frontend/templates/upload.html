@@ -152,8 +152,8 @@
 
                 <!-- Preview Area -->
                 <div id="preview-container" style="display: none; margin-top: 1.75rem; text-align: center;">
-                    <div style="max-width: 440px; margin: 0 auto; background: #020617; padding: 10px; border-radius: var(--radius-lg); border: 1px solid var(--border-card);">
-                        <img id="image-preview" src="" alt="Selected Retinal Preview" style="max-height: 320px; margin: 0 auto; border-radius: var(--radius-md);">
+                    <div style="max-width: 440px; width: 100%; margin: 0 auto; background: #020617; padding: 10px; border-radius: var(--radius-lg); border: 1px solid var(--border-card); box-sizing: border-box;">
+                        <img id="image-preview" src="" alt="Selected Retinal Preview" style="max-height: 320px; max-width: 100%; height: auto; margin: 0 auto; border-radius: var(--radius-md); display: block;">
                     </div>
                     <button type="button" class="btn-outline" style="margin-top: 1rem;" onclick="document.getElementById('fundus-image').click();">
                         Change Image
