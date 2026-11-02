@@ -1,7 +1,13 @@
+import os
 import numpy as np
 from PIL import Image
 import torch
 from torchvision import transforms
+
+try:
+    import torchvision.models as models
+except ImportError:
+    models = None
 
 try:
     from model_loader import get_model
@@ -20,6 +26,107 @@ CLASSES = [
 ]
 
 IMAGE_SIZE = 224
+
+# Cached auxiliary semantic validator for non-retinal image rejection
+_semantic_model = None
+_semantic_categories = None
+
+# The ImageNet classes matching circular, optical, concave, and trans-illuminated fundus fields
+ALLOWED_FUNDUS_SEMANTICS = {
+    'Petri dish', 'acorn', 'analog clock', 'apron', 'artichoke', 'binoculars', 'bubble',
+    'chambered nautilus', 'chime', 'coil', 'conch', 'cup', 'dough', 'dumbbell', 'electric ray',
+    'espresso', 'fig', 'goblet', 'gong', 'hourglass', 'jellyfish', 'lampshade', 'loupe',
+    'mixing bowl', 'mortar', 'mushroom', 'necklace', 'nematode', 'orange', 'padlock',
+    'perfume', 'pick', 'piggy bank', 'ping-pong ball', 'pitcher', 'potpie', 'ringlet',
+    'saltshaker', 'scale', 'shield', 'soup bowl', 'spatula', 'spindle', 'spotlight',
+    'sundial', 'sunglass', 'teddy', 'tick', 'toilet seat', 'tray', 'vase', 'wall clock',
+    'wooden spoon'
+}
+
+_semantic_transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+])
+
+
+def _get_semantic_validator():
+    """Lazily loads and caches the auxiliary ResNet18 model for domain verification."""
+    global _semantic_model, _semantic_categories
+    if _semantic_model is not None:
+        return _semantic_model, _semantic_categories
+
+    if models is None:
+        return None, None
+
+    try:
+        cache_file = os.path.expanduser(r'~/.cache/torch/hub/checkpoints/resnet18-f37072fd.pth')
+        resnet = models.resnet18()
+        if os.path.exists(cache_file):
+            state = torch.load(cache_file, map_location='cpu')
+            resnet.load_state_dict(state)
+        else:
+            resnet = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
+        resnet.eval()
+        _semantic_model = resnet
+        _semantic_categories = models.ResNet18_Weights.DEFAULT.meta['categories']
+        return _semantic_model, _semantic_categories
+    except Exception as err:
+        print(f"[Validator] Warning: Semantic validator initialization skipped: {err}")
+        return None, None
+
+
+def _format_rejection_reason(top_cat: str) -> str:
+    """Formats a descriptive clinical warning explaining why an image was rejected."""
+    c_lower = top_cat.lower()
+
+    person_keywords = [
+        'skirt', 'miniskirt', 'overskirt', 'jean', 'jersey', 'sweatshirt', 'cardigan',
+        'shirt', 't-shirt', 'suit', 'trench coat', 'kimono', 'gown', 'cloak', 'pajama',
+        'apparel', 'vestment', 'brassiere', 'diaper', 'sock', 'shoe', 'boot', 'sandal',
+        'hat', 'bonnet', 'cap', 'wig', 'lipstick', 'hair spray', 'sunglass', 'tie',
+        'bow tie', 'swimsuit', 'bikini', 'trunks', 'robe', 'uniform', 'lab coat',
+        'poncho', 'scarf', 'mitten', 'glove', 'trouser', 'vest', 'jacket', 'dress',
+        'wool', 'feather boa'
+    ]
+    for kw in person_keywords:
+        if kw in c_lower:
+            return "The uploaded image appears to contain a person, portrait, or clothing photograph, not a retinal fundus scan. Please upload a genuine retinal fundus photograph."
+
+    vehicle_keywords = [
+        'car', 'truck', 'bus', 'cab', 'wagon', 'jeep', 'limousine', 'bicycle',
+        'motorcycle', 'scooter', 'airplane', 'boat', 'ship', 'train', 'trailer',
+        'tractor', 'racer', 'convertible', 'minivan', 'airship', 'canoe'
+    ]
+    for kw in vehicle_keywords:
+        if kw in c_lower:
+            return f"The uploaded image appears to contain a vehicle ({top_cat.replace('_', ' ')}), not a retinal fundus scan. Please upload a genuine retinal fundus photograph."
+
+    document_keywords = [
+        'web site', 'envelope', 'binder', 'book', 'comic book', 'menu', 'packet',
+        'paper', 'scoreboard', 'crossword', 'carton', 'newspaper', 'cash machine'
+    ]
+    for kw in document_keywords:
+        if kw in c_lower:
+            return "The uploaded image appears to be a document, diagram, or graphic, not a retinal fundus scan. Please upload a genuine retinal fundus photograph."
+
+    nature_keywords = [
+        'cliff', 'alp', 'mountain', 'valley', 'promontory', 'lakeside', 'seashore',
+        'forest', 'tree', 'flower', 'grass', 'geyser', 'volcano', 'coral reef', 'daisy'
+    ]
+    for kw in nature_keywords:
+        if kw in c_lower:
+            return "The uploaded image appears to be an outdoor landscape or nature photograph, not a retinal fundus scan. Please upload a genuine retinal fundus photograph."
+
+    building_keywords = [
+        'building', 'house', 'church', 'palace', 'castle', 'monastery', 'library',
+        'desk', 'chair', 'sofa', 'table', 'bookcase', 'bed', 'wardrobe', 'window'
+    ]
+    for kw in building_keywords:
+        if kw in c_lower:
+            return "The uploaded image appears to be a building or indoor scene, not a retinal fundus scan. Please upload a genuine retinal fundus photograph."
+
+    return f"The uploaded image does not appear to be an authentic retinal fundus scan (detected: {top_cat.replace('_', ' ')}). Please upload a genuine retinal fundus photograph."
 
 
 class LetterboxResize:
@@ -171,6 +278,22 @@ def validate_fundus_image(image: Image.Image) -> tuple:
     r, g, b = mean_rgb[0], mean_rgb[1], mean_rgb[2]
     if b > r * 1.35 and b > 140:
         return False, "The color profile does not match retinal anatomy (unnatural blue dominance detected). Please upload an authentic eye fundus photograph."
+
+    # 9. Semantic domain check (Rejects real-world photos: people, trees, animals, vehicles, clothing, etc.)
+    sem_model, sem_cats = _get_semantic_validator()
+    if sem_model is not None and sem_cats is not None:
+        try:
+            tensor = _semantic_transform(rgb).unsqueeze(0)
+            with torch.no_grad():
+                out = sem_model(tensor)
+                probs = torch.softmax(out, dim=1)[0]
+                top1_idx = torch.argmax(probs).item()
+                top1_cat = sem_cats[top1_idx]
+
+            if top1_cat not in ALLOWED_FUNDUS_SEMANTICS:
+                return False, _format_rejection_reason(top1_cat)
+        except Exception as sem_err:
+            print(f"[Validator] Warning during semantic validation: {sem_err}")
 
     return True, "Valid retinal fundus photograph."
 
