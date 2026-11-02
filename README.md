@@ -1,5 +1,4 @@
 # VisionX AI — AI-Powered Multi-Disease Eye Screening & Clinical Decision Support
-
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![Framework](https://img.shields.io/badge/Framework-Flask-000000.svg)](https://flask.palletsprojects.com/)
 [![Deep Learning](https://img.shields.io/badge/Deep%20Learning-PyTorch%20%7C%20timm-ee4c2c.svg)](https://pytorch.org/)
