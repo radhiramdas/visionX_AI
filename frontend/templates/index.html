@@ -40,7 +40,6 @@
                 <li><a href="#features" class="nav-item">Features</a></li>
                 <li><a href="#diseases" class="nav-item">Eye Diseases</a></li>
                 <li><a href="#how-it-works" class="nav-item">How It Works</a></li>
-                <li><a href="#contact" class="nav-item">Contact</a></li>
             </ul>
 
             <!-- Right Actions (Theme Toggle, Login, Get Started) -->
@@ -275,7 +274,7 @@
 
                     <div class="about-visual-column">
                         <div class="about-image-card">
-                            <img src="/static/images/fundus_hero.jpg" alt="Retinal Fundus Examination">
+                            <img src="{{ url_for('static', filename='images/doctor_examination.jpg') }}" alt="Doctor Performing Clinical Eye Examination">
                         </div>
                         <div class="about-card-overlay-badge">
                             <div class="badge-icon-box">
@@ -597,63 +596,6 @@
                 </div>
             </div>
         </section>
-
-        <!-- =========================================================================
-             7. Contact & Consultation Section
-             ========================================================================= -->
-        <section class="content-section" id="contact">
-            <div class="section-container">
-                <div class="contact-box">
-                    <div>
-                        <span class="section-tag">Get In Touch</span>
-                        <h2 class="section-title" style="text-align: left; margin-bottom: 1rem;">
-                            VisionX AI Research & Support
-                        </h2>
-                        <p style="color: var(--text-secondary); line-height: 1.65;">
-                            VisionX AI is developed as an advanced MCA major project demonstration on artificial intelligence in ophthalmological diagnostic workflows. Reach out for technical inquiries or demo walkthroughs.
-                        </p>
-
-                        <ul class="contact-info-list">
-                            <li class="contact-info-item">
-                                <div class="contact-icon-box">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                                        <polyline points="22,6 12,13 2,6"></polyline>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <strong style="color: var(--text-primary); display: block;">Email Inquiries</strong>
-                                    <span>research@visionx-ai.local</span>
-                                </div>
-                            </li>
-                            <li class="contact-info-item">
-                                <div class="contact-icon-box">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                        <circle cx="12" cy="10" r="3"></circle>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <strong style="color: var(--text-primary); display: block;">Institution</strong>
-                                    <span>Department of Computer Applications (MCA)</span>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <!-- Contact Form -->
-                    <form class="contact-form" id="contact-form" onsubmit="event.preventDefault(); alert('Thank you for contacting VisionX AI. Your query has been received.'); this.reset();">
-                        <input type="text" class="contact-input" placeholder="Your Name" required>
-                        <input type="email" class="contact-input" placeholder="Your Email" required>
-                        <input type="text" class="contact-input" placeholder="Subject">
-                        <textarea class="contact-input" placeholder="Your message or inquiry..."></textarea>
-                        <button type="submit" class="btn-primary-cyan" style="width: 100%; border-radius: var(--radius-md);">
-                            Send Message
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </section>
     </main>
 
     <!-- =========================================================================
@@ -706,7 +648,6 @@
                     <ul class="footer-links">
                         <li><a href="#about">Academic Project</a></li>
                         <li><a href="#about">Screening Notice</a></li>
-                        <li><a href="#contact">Contact Support</a></li>
                     </ul>
                 </div>
             </div>
